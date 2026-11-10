@@ -21,9 +21,7 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Household.count", 1) do
       post household_url, params: {
         household: {
-          name: "Los Márquez",
-          savings_goal_name: "Cena especial",
-          savings_goal_amount: 35.0
+          name: "Los Márquez"
         },
         user_alias: "Papá"
       }
