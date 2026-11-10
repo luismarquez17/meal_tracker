@@ -15,10 +15,9 @@ Rails.application.routes.draw do
   get "signup", to: "registrations#new"
   post "signup", to: "registrations#create"
 
-  # Google OAuth & Dev Fallback
+  # Google OAuth Oficial
   match "/auth/:provider/callback", to: "sessions#omniauth", via: %i[get post]
   get "/auth/failure", to: "sessions#failure"
-  post "/auth/google_dev_login", to: "sessions#google_dev_login"
 
   # Registros de Comidas
   resources :meal_logs do

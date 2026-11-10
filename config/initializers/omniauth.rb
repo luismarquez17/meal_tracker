@@ -12,3 +12,8 @@ end
 
 OmniAuth.config.allowed_request_methods = %i[get post]
 OmniAuth.config.silence_get_warning = true
+
+# Manejo amigable de errores y cancelaciones de OAuth (ej. cuando el usuario cancela en Google)
+OmniAuth.config.on_failure = proc do |env|
+  SessionsController.action(:failure).call(env)
+end

@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
-  skip_before_action :authenticate_user!, only: %i[new create omniauth failure google_dev_login]
-  protect_from_forgery except: %i[omniauth google_dev_login]
+  skip_before_action :authenticate_user!, only: %i[new create omniauth failure]
+  protect_from_forgery except: %i[omniauth]
 
   def new
     redirect_to root_path if logged_in?
@@ -41,29 +41,17 @@ class SessionsController < ApplicationController
     end
   end
 
-  def google_dev_login
-    # Endpoint para pruebas directas o cuando no hay GOOGLE_CLIENT_ID configurado en local
-    email = params[:email].to_s.strip.downcase.presence || "usuario.google@gmail.com"
-    name = params[:name].presence || email.split("@").first.humanize
-
-    mock_auth = Struct.new(:uid, :info).new(
-      "google_mock_#{SecureRandom.hex(6)}",
-      Struct.new(:email, :name, :image).new(email, name, "https://lh3.googleusercontent.com/a/default-user")
-    )
-
-    user = User.from_omniauth(mock_auth)
-    session[:user_id] = user.id
-
-    flash[:notice] = "¡Sesión iniciada con cuenta Google (#{user.email})!"
-    if user.admin?
-      redirect_to admin_dashboard_path
-    else
-      redirect_to root_path
-    end
-  end
-
   def failure
-    redirect_to login_path, alert: "Error en la autenticación con Google: #{params[:message].to_s.humanize}"
+    error_msg = params[:message].to_s.strip
+    friendly_msg = case error_msg.downcase
+                   when "access_denied"
+                     "Cancelaste el inicio de sesión con Google."
+                   when "invalid_credentials", "invalid_client"
+                     "Credenciales de Google inválidas. Verifica tu GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET en .env."
+                   else
+                     error_msg.present? ? "No se pudo completar el inicio de sesión con Google: #{error_msg.humanize}." : "No se pudo completar el inicio de sesión con Google."
+                   end
+    redirect_to login_path, alert: friendly_msg
   end
 
   def destroy
