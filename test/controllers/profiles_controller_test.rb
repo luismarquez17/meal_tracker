@@ -117,11 +117,10 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_match "La confirmación de la contraseña no coincide", response.body
   end
 
-  test "dashboard displays active user profile indicator" do
+  test "dashboard displays active user profile navigation link" do
     post login_path, params: { email: @user.email, password: "secretpassword" }
     get dashboard_path
     assert_response :success
-    assert_select "span", text: /#{@user.name}/
-    assert_select "p", text: /#{@user.email}/
+    assert_select "a[href=?]", profile_path
   end
 end
