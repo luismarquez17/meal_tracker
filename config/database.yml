@@ -12,8 +12,9 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-# Producción: PostgreSQL en Render.com via DATABASE_URL
-# Render inyecta DATABASE_URL automáticamente al conectar una base de datos.
+# Producción: PostgreSQL (Supabase / Render / Neon via DATABASE_URL)
 production:
   url: <%= ENV["DATABASE_URL"] %>
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  prepared_statements: false
+  sslmode: require
