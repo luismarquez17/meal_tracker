@@ -111,7 +111,7 @@
             <% end %>
 
             <%= link_to profile_path, class: "flex items-center space-x-1.5 p-1 px-2 rounded-full text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition shrink-0", title: "Mi Perfil" do %>
-              <%= image_tag(current_user.avatar_url.presence || '/default_avatar.svg', class: "w-6 h-6 rounded-full object-cover border border-slate-200") %>
+              <%= image_tag(current_user.profile_avatar_image, class: "w-6 h-6 rounded-full object-cover border border-slate-200") %>
               <span class="text-xs font-bold max-w-[100px] truncate"><%= current_user.name.presence || current_user.email.split('@').first %></span>
             <% end %>
 
@@ -211,7 +211,7 @@
         <% end %>
 
         <%= link_to profile_path, class: "flex flex-col items-center py-1 group #{request.path.start_with?('/profile') ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
-          <%= image_tag(current_user.avatar_url.presence || '/default_avatar.svg', class: "w-6 h-6 rounded-full object-cover border #{request.path.start_with?('/profile') ? 'border-emerald-600' : 'border-slate-300'}") %>
+          <%= image_tag(current_user.profile_avatar_image, class: "w-6 h-6 rounded-full object-cover border #{request.path.start_with?('/profile') ? 'border-emerald-600' : 'border-slate-300'}") %>
           <span class="text-[10px] mt-0.5 font-medium">Perfil</span>
         <% end %>
       </nav>

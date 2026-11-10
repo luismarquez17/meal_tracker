@@ -11,6 +11,12 @@ class ProfilesController < ApplicationController
 
   def update
     @user = current_user
+
+    if params[:user][:remove_avatar] == "1"
+      @user.avatar.purge_later if @user.avatar.attached?
+      @user.avatar_url = nil
+    end
+
     if @user.update(user_params)
       flash[:notice] = "Datos actualizados correctamente."
       redirect_to profile_path
@@ -54,6 +60,6 @@ class ProfilesController < ApplicationController
   private
 
   def user_params
-    params.require(:user).permit(:name, :email, :avatar_url)
+    params.require(:user).permit(:name, :email, :avatar, :avatar_url)
   end
 end

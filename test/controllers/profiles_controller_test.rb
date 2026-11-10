@@ -48,6 +48,24 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com/avatar.png", @user.avatar_url
   end
 
+  test "uploads avatar file and removes it" do
+    post login_path, params: { email: @user.email, password: "secretpassword" }
+
+    avatar_file = fixture_file_upload(Rails.root.join("public/icon.svg"), "image/svg+xml")
+    patch profile_path, params: { user: { avatar: avatar_file } }
+    assert_redirected_to profile_path
+
+    @user.reload
+    assert @user.avatar.attached?
+
+    # Remove avatar
+    patch profile_path, params: { user: { remove_avatar: "1" } }
+    assert_redirected_to profile_path
+
+    @user.reload
+    assert_not @user.avatar.attached?
+  end
+
   test "changes password successfully" do
     post login_path, params: { email: @user.email, password: "secretpassword" }
 

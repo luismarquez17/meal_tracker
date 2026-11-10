@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :meal_reactions, dependent: :destroy
   has_many :cooking_turns, dependent: :destroy
   has_one :owned_household, class_name: "Household", foreign_key: :created_by_id, dependent: :nullify
+  has_one_attached :avatar
 
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: 6 }, if: -> { new_record? && google_uid.blank? }
@@ -61,6 +62,11 @@ class User < ApplicationRecord
 
   def display_name
     household_alias.presence || name.presence || email.split("@").first.titleize
+  end
+
+  def profile_avatar_image
+    return avatar if avatar.attached?
+    avatar_url.presence || "/default_avatar.svg"
   end
 
   def household_creator?
