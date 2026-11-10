@@ -1,0 +1,91 @@
+<div class="space-y-5">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-200 flex items-center justify-center font-bold text-lg border border-slate-700">
+        <%= @user.name.to_s[0..1] %>
+      </div>
+      <div>
+        <h1 class="text-xl font-black text-white flex items-center space-x-2">
+          <span><%= @user.name %></span>
+          <% if @user.admin? %>
+            <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+              Super Admin
+            </span>
+          <% end %>
+        </h1>
+        <p class="text-xs text-slate-400"><%= @user.email %></p>
+      </div>
+    </div>
+
+    <%= link_to admin_users_path, class: "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition" do %>
+      ← Volver a Usuarios
+    <% end %>
+  </div>
+
+  <!-- Estado y Acciones Rápidas -->
+  <div class="bg-slate-900/90 rounded-3xl p-5 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado de la Cuenta</p>
+      <div class="flex items-center space-x-2 mt-1">
+        <% if @user.active_subscription? %>
+          <span class="text-emerald-400 font-bold text-sm">✅ Suscripción Activa</span>
+          <span class="text-slate-400 text-xs">(<%= @user.days_left_in_subscription %> días restantes)</span>
+        <% else %>
+          <span class="text-rose-400 font-bold text-sm">⚠️ Suscripción Vencida</span>
+        <% end %>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">
+        Vence: <%= @user.subscription_expires_at ? @user.subscription_expires_at.strftime("%d de %B de %Y") : "Sin fecha" %>
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <%= button_to extend_subscription_admin_user_path(@user), method: :post, class: "px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition cursor-pointer" do %>
+        <span>Sumar +30 Días de Membresía</span>
+      <% end %>
+
+      <% unless @user == current_user %>
+        <%= button_to toggle_admin_admin_user_path(@user), method: :post, data: { turbo_confirm: "¿Cambiar rol de admin a este usuario?" }, class: "px-3 py-2 bg-slate-800 hover:bg-amber-950 text-slate-300 hover:text-amber-300 font-bold text-xs rounded-xl transition cursor-pointer" do %>
+          <%= @user.admin? ? "Revocar Admin" : "Hacer Admin" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Historial de Pagos de este Usuario -->
+  <div class="bg-slate-900/90 rounded-3xl p-5 border border-slate-800">
+    <h3 class="text-sm font-extrabold text-white mb-3">Historial de Pagos Reportados</h3>
+    <% if @payments.any? %>
+      <div class="divide-y divide-slate-800 text-xs">
+        <% @payments.each do |p| %>
+          <div class="py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <span><%= p.method_icon %></span>
+              <div>
+                <p class="font-bold text-white"><%= p.human_method %> • $<%= sprintf('%.2f', p.amount) %></p>
+                <p class="text-[11px] text-slate-400 font-mono">Ref: <%= p.reference_number %> • <%= p.created_at.strftime("%d/%m/%Y %I:%M %p") %></p>
+              </div>
+            </div>
+            <div>
+              <% if p.approved? %>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Aprobado (+30d)
+                </span>
+              <% elsif p.pending? %>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  Pendiente
+                </span>
+              <% else %>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                  Rechazado
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-xs text-slate-500 text-center py-4">Este usuario no tiene pagos registrados.</p>
+    <% end %>
+  </div>
+</div>

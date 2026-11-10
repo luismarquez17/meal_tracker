@@ -1,0 +1,124 @@
+<div class="space-y-5">
+  <!-- Encabezado -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-black text-white flex items-center space-x-2">
+        <span>Gestión de Pagos y Suscripciones</span>
+      </h1>
+      <p class="text-xs text-slate-400">Verifica pagos de $2.00 y activa los 30 días de suscripción al instante.</p>
+    </div>
+
+    <%= link_to admin_dashboard_path, class: "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition w-fit" do %>
+      ← Volver al Dashboard
+    <% end %>
+  </div>
+
+  <!-- Pestañas de Filtro -->
+  <div class="flex items-center space-x-2 border-b border-slate-800 pb-3 overflow-x-auto text-xs font-bold">
+    <%= link_to admin_payments_path(status: "pending"), class: "px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 #{@filter_status == 'pending' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+      <span>⏳ Pendientes</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black <%= @filter_status == 'pending' ? 'bg-slate-950 text-amber-300' : 'bg-slate-800 text-slate-300' %>">
+        <%= @pending_count %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_payments_path(status: "approved"), class: "px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 #{@filter_status == 'approved' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+      <span>✅ Aprobados</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black <%= @filter_status == 'approved' ? 'bg-emerald-950 text-emerald-200' : 'bg-slate-800 text-slate-300' %>">
+        <%= @approved_count %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_payments_path(status: "rejected"), class: "px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5 #{@filter_status == 'rejected' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+      <span>❌ Rechazados</span>
+      <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black <%= @filter_status == 'rejected' ? 'bg-rose-950 text-rose-200' : 'bg-slate-800 text-slate-300' %>">
+        <%= @rejected_count %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_payments_path(status: "all"), class: "px-3.5 py-1.5 rounded-xl transition #{@filter_status == 'all' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+      <span>Todos</span>
+    <% end %>
+  </div>
+
+  <!-- Contenido de Pagos -->
+  <% if @filter_status == "pending" %>
+    <div id="pending_payments_list" class="space-y-3">
+      <% if @payments.any? %>
+        <% @payments.each do |payment| %>
+          <%= render "admin/payments/payment_row", payment: payment %>
+        <% end %>
+      <% else %>
+        <div class="py-12 text-center bg-slate-900/60 rounded-3xl border border-slate-800">
+          <p class="text-3xl mb-2">✨</p>
+          <h3 class="text-sm font-bold text-white">No hay pagos pendientes</h3>
+          <p class="text-xs text-slate-400 mt-1">Cuando un usuario reporte un pago, aparecerá aquí en tiempo real.</p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Tabla de Aprobados / Rechazados / Historial -->
+    <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xs">
+      <% if @payments.any? %>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-slate-400 border-b border-slate-800 bg-slate-950/60">
+                <th class="py-3 px-4 font-bold">Cliente</th>
+                <th class="py-3 px-4 font-bold">Método</th>
+                <th class="py-3 px-4 font-bold">Referencia</th>
+                <th class="py-3 px-4 font-bold text-right">Monto</th>
+                <th class="py-3 px-4 font-bold text-center">Estado</th>
+                <th class="py-3 px-4 font-bold">Fecha</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 font-medium">
+              <% @payments.each do |payment| %>
+                <tr class="hover:bg-slate-800/30 transition">
+                  <td class="py-3 px-4">
+                    <p class="font-bold text-white"><%= payment.user.name %></p>
+                    <p class="text-[11px] text-slate-400"><%= payment.user.email %></p>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="inline-flex items-center space-x-1">
+                      <span><%= payment.method_icon %></span>
+                      <span class="text-slate-300 font-bold"><%= payment.human_method %></span>
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-mono font-bold text-slate-300">
+                    <%= payment.reference_number %>
+                  </td>
+                  <td class="py-3 px-4 font-mono font-bold text-emerald-400 text-right">
+                    $<%= sprintf('%.2f', payment.amount) %>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <% if payment.approved? %>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Aprobado (+30d)
+                      </span>
+                    <% elsif payment.pending? %>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                        Pendiente
+                      </span>
+                    <% else %>
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                        Rechazado
+                      </span>
+                    <% end %>
+                  </td>
+                  <td class="py-3 px-4 text-slate-400 text-[11px]">
+                    <%= payment.created_at.strftime("%d/%m/%Y %I:%M %p") %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="py-12 text-center">
+          <p class="text-xs text-slate-400">No hay pagos en esta categoría.</p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

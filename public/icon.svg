@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#047857" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded rectangle -->
+  <rect width="512" height="512" rx="128" fill="url(#emeraldGrad)" />
+
+  <!-- Inner border highlight -->
+  <rect x="8" y="8" width="496" height="496" rx="120" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.15" />
+
+  <!-- Center Pot / Bowl Symbol -->
+  <g transform="translate(106, 126)" filter="url(#shadow)">
+    <!-- Steam waves -->
+    <path d="M75,60 C65,30 95,10 75,-20" stroke="#a7f3d0" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.8" />
+    <path d="M150,50 C140,20 170,0 150,-30" stroke="#ffffff" stroke-width="16" stroke-linecap="round" fill="none" opacity="0.9" />
+    <path d="M225,60 C215,30 245,10 225,-20" stroke="#a7f3d0" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.8" />
+
+    <!-- Bowl / Pot Base -->
+    <path d="M20,110 C20,230 280,230 280,110 Z" fill="#ffffff" />
+    <!-- Bowl Rim -->
+    <ellipse cx="150" cy="110" rx="130" ry="24" fill="#f8fafc" stroke="#e2e8f0" stroke-width="4" />
+    <!-- Soup Interior -->
+    <ellipse cx="150" cy="112" rx="114" ry="18" fill="#f59e0b" />
+    <!-- Vegetables / Garnish -->
+    <circle cx="120" cy="112" r="7" fill="#10b981" />
+    <circle cx="160" cy="115" r="6" fill="#ef4444" />
+    <circle cx="180" cy="110" r="5" fill="#10b981" />
+    <circle cx="140" cy="108" r="4" fill="#fbbf24" />
+
+    <!-- Bowl Handles -->
+    <path d="M16,115 C-6,115 -6,145 16,145" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+    <path d="M284,115 C306,115 306,145 284,145" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" />
+  </g>
+</svg>

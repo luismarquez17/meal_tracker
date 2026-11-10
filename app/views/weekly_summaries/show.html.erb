@@ -1,0 +1,245 @@
+<%
+  prev_week = @date - 1.week
+  next_week = @date + 1.week
+  is_current_week = (@start_date..@end_date).cover?(Date.current)
+  category_labels = {
+    "meal"      => "Comidas fuera",
+    "snack"     => "Café y Antojos",
+    "transport" => "Transporte y Pasajes",
+    "groceries" => "Compras extras",
+    "services"  => "Recargas y Servicios",
+    "other"     => "Otros gastos",
+    "none"      => "Sin gastos extras"
+  }
+  temptation_label = category_labels[@top_temptation_category] || @top_temptation_category.titleize
+%>
+
+<div class="space-y-4 max-w-md mx-auto">
+  <!-- Selector de Semana y Ámbito (Personal vs Hogar) -->
+  <div class="bg-white rounded-3xl p-3 shadow-2xs border border-slate-100 flex items-center justify-between">
+    <%= link_to weekly_summary_path(date: prev_week, scope: @scope), class: "w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95", title: "Semana anterior" do %>
+      ←
+    <% end %>
+
+    <div class="text-center px-2">
+      <div class="flex items-center justify-center space-x-1.5">
+        <span class="text-xs md:text-sm font-extrabold text-slate-900">
+          <%= @start_date.strftime("%d %b") %> - <%= @end_date.strftime("%d %b %Y") %>
+        </span>
+        <% if is_current_week %>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+            Esta semana
+          </span>
+        <% end %>
+      </div>
+      <p class="text-[11px] text-slate-500 font-medium">Resumen Semanal Estilo Wrapped</p>
+    </div>
+
+    <%= link_to weekly_summary_path(date: next_week, scope: @scope), class: "w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95", title: "Semana siguiente" do %>
+      →
+    <% end %>
+  </div>
+
+  <!-- Switch Personal vs Hogar (si pertenece a un hogar) -->
+  <% if @household.present? %>
+    <div class="grid grid-cols-2 p-1 bg-slate-200/80 rounded-2xl text-xs font-bold text-center">
+      <%= link_to weekly_summary_path(date: @date, scope: "personal"), class: "py-2 rounded-xl transition #{ @scope == 'personal' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900' }" do %>
+        👤 Mi Resumen
+      <% end %>
+      <%= link_to weekly_summary_path(date: @date, scope: "family"), class: "py-2 rounded-xl transition flex items-center justify-center space-x-1 #{ @scope == 'family' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900' }" do %>
+        <span>👨‍👩‍👧</span>
+        <span>Hogar (<%= @household.name %>)</span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- TARJETA WRAPPED VERTICAL (Lista para captura y visualmente impactante) -->
+  <div id="wrapped-card" class="relative overflow-hidden rounded-[32px] bg-gradient-to-b <%= @badge_info[:color_class] %> text-white p-6 sm:p-7 shadow-2xl border-4 border-white/20">
+    <!-- Efecto decorativo de fondo -->
+    <div class="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+    <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-black/10 blur-2xl pointer-events-none"></div>
+
+    <!-- Encabezado de la Tarjeta -->
+    <div class="flex items-center justify-between border-b border-white/20 pb-4">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-xs">
+          ✨
+        </div>
+        <div>
+          <h2 class="text-xs uppercase tracking-widest font-black text-white/80">MealTracker Wrapped</h2>
+          <p class="text-base font-black text-white leading-tight">
+            <%= @scope == 'family' ? @household.name : current_user.display_name %>
+          </p>
+        </div>
+      </div>
+      <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md border border-white/30 text-white">
+        <%= @start_date.strftime("%d %b") %> - <%= @end_date.strftime("%d %b") %>
+      </span>
+    </div>
+
+    <!-- Puntuación y Rango -->
+    <div class="my-6 text-center space-y-2">
+      <div class="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-black shadow-xs">
+        <%= @badge_info[:title] %>
+      </div>
+      
+      <div class="flex items-center justify-center space-x-2 pt-1">
+        <span class="text-5xl sm:text-6xl font-black tracking-tight"><%= @habit_score %></span>
+        <span class="text-xl sm:text-2xl font-bold text-white/70">/ 10</span>
+      </div>
+      <p class="text-xs text-white/90 max-w-xs mx-auto font-medium">
+        <%= @badge_info[:description] %>
+      </p>
+    </div>
+
+    <!-- Métricas Clave en Grid -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <!-- 1. Marcador Comidas -->
+      <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Hábito de Comida</span>
+        <div class="flex items-baseline space-x-1">
+          <span class="text-2xl font-black"><%= @home_meals %></span>
+          <span class="text-xs font-semibold text-white/80">en casa 🏠</span>
+        </div>
+        <p class="text-[11px] text-white/75 font-medium">vs <%= @street_meals %> en la calle 🍔</p>
+      </div>
+
+      <!-- 2. Ahorro Estimado -->
+      <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Ahorro en Casa</span>
+        <div class="flex items-baseline space-x-1">
+          <span class="text-2xl font-black text-amber-200">$<%= sprintf('%.2f', @saved) %></span>
+        </div>
+        <p class="text-[10px] text-white/75 truncate font-medium">~<%= sprintf('%.2f', @saved_bs) %> Bs. al BCV</p>
+      </div>
+
+      <!-- 3. Gasto en la Calle -->
+      <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Gasto en la Calle</span>
+        <div class="flex items-baseline space-x-1">
+          <span class="text-xl font-black text-rose-200">$<%= sprintf('%.2f', @street_spent) %></span>
+        </div>
+        <p class="text-[10px] text-white/75 truncate font-medium">~<%= sprintf('%.2f', @street_spent_bs) %> Bs.</p>
+      </div>
+
+      <!-- 4. Mayor Tentación -->
+      <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Mayor Tentación</span>
+        <div class="text-sm font-black truncate">
+          <%= temptation_label %>
+        </div>
+        <p class="text-[10px] text-white/75 font-medium">
+          <% if @top_temptation_amount.positive? %>
+            $<%= sprintf('%.2f', @top_temptation_amount) %> USD
+          <% else %>
+            ¡Impecable! 0 tentaciones
+          <% end %>
+        </p>
+      </div>
+    </div>
+
+    <!-- Día Estrella -->
+    <% if @best_day.present? && @best_day[:home] > 0 %>
+      <div class="bg-white/20 backdrop-blur-md rounded-2xl p-3 border border-white/20 flex items-center justify-between text-xs mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">⭐</span>
+          <div>
+            <span class="font-extrabold block">Día Estrella: <%= spanish_full_date(@best_day[:date]) %></span>
+            <span class="text-[11px] text-white/80"><%= @best_day[:home] %> comidas caseras y $0 gastos fuera</span>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded-full bg-white/25 text-[10px] font-black uppercase">100% Casero</span>
+      </div>
+    <% end %>
+
+    <!-- Si es Hogar: Mostrar el Chef de la Semana -->
+    <% if @scope == "family" && @leaderboard.present? %>
+      <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-2 mb-4">
+        <div class="flex items-center justify-between text-xs font-black">
+          <span>👨‍🍳 Chef de la Semana en el Hogar:</span>
+          <span class="text-amber-200">🏆 <%= @leaderboard.first[:user].display_name %></span>
+        </div>
+        <div class="space-y-1">
+          <% @leaderboard.each_with_index do |item, idx| %>
+            <div class="flex items-center justify-between text-[11px] text-white/90">
+              <span class="font-medium"><%= idx + 1 %>. <%= item[:user].display_name %></span>
+              <span class="font-bold"><%= item[:home_count] %> comidas en casa ($<%= sprintf('%.2f', item[:saved]) %> ahorrados)</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Pie de Tarjeta (Marca de agua sutil) -->
+    <div class="pt-3 border-t border-white/20 flex items-center justify-between text-[11px] text-white/75">
+      <div class="flex items-center space-x-1.5 font-bold">
+        <span>🍲</span>
+        <span>MealTracker App</span>
+      </div>
+      <span class="font-medium">Control Calle vs Casa 🇻🇪</span>
+    </div>
+  </div>
+
+  <!-- BOTONES DE ACCIÓN (Descargar y Compartir) -->
+  <div class="grid grid-cols-2 gap-2.5 pt-1">
+    <button type="button"
+            onclick="downloadWrappedCard()"
+            class="py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md active:scale-95 transition flex items-center justify-center space-x-1.5 cursor-pointer">
+      <span>📸</span>
+      <span>Descargar Imagen</span>
+    </button>
+
+    <%
+      wa_text = "✨ *Mi Resumen Semanal en MealTracker* ✨\n\n" \
+                "🏆 Rango: #{@badge_info[:title]} (#{@habit_score}/10)\n" \
+                "🏠 Comidas en casa: #{@home_meals}\n" \
+                "🍔 Comidas en la calle: #{@street_meals}\n" \
+                "💰 Ahorro estimado: $#{sprintf('%.2f', @saved)} USD (~#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
+                "💸 Gasto en calle: $#{sprintf('%.2f', @street_spent)} USD\n\n" \
+                "¡Controlando mis comidas y ahorrando con MealTracker!"
+      wa_url = "https://wa.me/?text=#{CGI.escape(wa_text)}"
+    %>
+    <a href="<%= wa_url %>"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md active:scale-95 transition flex items-center justify-center space-x-1.5 text-center">
+      <span>💬</span>
+      <span>WhatsApp</span>
+    </a>
+  </div>
+
+  <div class="text-center pt-2">
+    <%= link_to root_path, class: "text-xs font-semibold text-slate-500 hover:text-slate-800" do %>
+      ← Volver al Diario
+    <% end %>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  function downloadWrappedCard() {
+    const card = document.getElementById('wrapped-card');
+    if (!card) return;
+
+    // Usar html2canvas para renderizar la tarjeta con alta calidad
+    if (typeof html2canvas !== 'undefined') {
+      html2canvas(card, {
+        scale: 2, // 2x para retina display nítido
+        useCORS: true,
+        backgroundColor: null
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'MealTracker_Wrapped_<%= @start_date.strftime("%Y_%m_%d") %>.png';
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch(err => {
+        console.error('Error exportando tarjeta:', err);
+        alert('No se pudo generar la imagen. Toma una captura de pantalla a la tarjeta.');
+      });
+    } else {
+      alert('Toma una captura de pantalla a la tarjeta para compartirla.');
+    }
+  }
+</script>

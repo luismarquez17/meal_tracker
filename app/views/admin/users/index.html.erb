@@ -1,0 +1,122 @@
+<div class="space-y-5">
+  <!-- Encabezado -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-black text-white flex items-center space-x-2">
+        <span>Usuarios Registrados</span>
+        <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full font-bold">
+          <%= @total_count %> total
+        </span>
+      </h1>
+      <p class="text-xs text-slate-400">Monitorea a la gente que usa tu app y el estado de sus suscripciones.</p>
+    </div>
+
+    <%= link_to admin_dashboard_path, class: "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition w-fit" do %>
+      ← Volver al Dashboard
+    <% end %>
+  </div>
+
+  <!-- Barra de Búsqueda y Filtros -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+    <%= form_with url: admin_users_path, method: :get, local: true, class: "flex items-center space-x-2 flex-1" do |f| %>
+      <div class="relative flex-1">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
+          🔍
+        </span>
+        <%= f.text_field :q, value: params[:q], placeholder: "Buscar por nombre o correo...", class: "w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 text-white rounded-xl text-xs placeholder:text-slate-500 focus:outline-hidden focus:border-amber-500" %>
+      </div>
+      <%= f.submit "Buscar", class: "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer" %>
+    <% end %>
+
+    <div class="flex items-center space-x-1 text-xs font-bold">
+      <%= link_to "Todos", admin_users_path, class: "px-2.5 py-1 rounded-lg #{params[:status].blank? ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}" %>
+      <%= link_to "Activos", admin_users_path(status: "active"), class: "px-2.5 py-1 rounded-lg #{params[:status] == 'active' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}" %>
+      <%= link_to "Vencidos", admin_users_path(status: "expired"), class: "px-2.5 py-1 rounded-lg #{params[:status] == 'expired' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'}" %>
+    </div>
+  </div>
+
+  <!-- Tabla de Usuarios -->
+  <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xs">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="text-slate-400 border-b border-slate-800 bg-slate-950/60">
+            <th class="py-3 px-4 font-bold">Usuario</th>
+            <th class="py-3 px-4 font-bold text-center">Estado Membresía</th>
+            <th class="py-3 px-4 font-bold">Días Restantes / Vencimiento</th>
+            <th class="py-3 px-4 font-bold">Registro</th>
+            <th class="py-3 px-4 font-bold text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 font-medium">
+          <% @users.each do |user| %>
+            <tr class="hover:bg-slate-800/30 transition">
+              <td class="py-3.5 px-4">
+                <div class="flex items-center space-x-3">
+                  <div class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-bold text-xs uppercase border border-slate-700">
+                    <%= user.name.to_s[0..1] %>
+                  </div>
+                  <div>
+                    <div class="flex items-center space-x-1.5">
+                      <span class="font-bold text-white"><%= user.name %></span>
+                      <% if user.admin? %>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold">
+                          Admin
+                        </span>
+                      <% end %>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-mono"><%= user.email %></p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="py-3.5 px-4 text-center">
+                <% if user.admin? %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Super Admin
+                  </span>
+                <% elsif user.active_subscription? %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Activa
+                  </span>
+                <% else %>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                    Vencida
+                  </span>
+                <% end %>
+              </td>
+
+              <td class="py-3.5 px-4">
+                <% if user.admin? %>
+                  <span class="text-amber-400 font-bold">Ilimitado</span>
+                <% elsif user.active_subscription? %>
+                  <p class="font-bold text-emerald-400"><%= user.days_left_in_subscription %> días restantes</p>
+                  <p class="text-[10px] text-slate-400">Vence: <%= user.subscription_expires_at.strftime("%d/%m/%Y") %></p>
+                <% else %>
+                  <p class="font-bold text-rose-400">0 días</p>
+                  <p class="text-[10px] text-slate-400">Vencida</p>
+                <% end %>
+              </td>
+
+              <td class="py-3.5 px-4 text-slate-400 text-[11px]">
+                <%= user.created_at.strftime("%d/%m/%Y") %>
+              </td>
+
+              <td class="py-3.5 px-4 text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <%= button_to extend_subscription_admin_user_path(user), method: :post, class: "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition active:scale-95 flex items-center space-x-1 cursor-pointer", title: "Activar o sumar 30 días" do %>
+                    <span>+30 días</span>
+                  <% end %>
+
+                  <%= link_to admin_user_path(user), class: "p-1.5 text-slate-400 hover:text-white transition" do %>
+                    👁️
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

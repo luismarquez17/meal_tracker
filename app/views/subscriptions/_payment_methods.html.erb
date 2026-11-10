@@ -1,0 +1,134 @@
+<div class="space-y-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-sm font-extrabold text-slate-900">Métodos de Pago Disponibles</h3>
+      <p class="text-xs text-slate-500">Realiza tu pago de <strong class="text-emerald-700">$<%= sprintf('%.2f', payment_setting.monthly_price_usd) %> USD</strong> (o al cambio oficial) y repórtalo abajo.</p>
+    </div>
+    <span class="px-3 py-1 bg-emerald-600 text-white font-extrabold text-xs rounded-full shadow-xs">
+      $<%= sprintf('%.2f', payment_setting.monthly_price_usd) %> / mes
+    </span>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Tarjeta Pago Móvil -->
+    <div class="bg-gradient-to-br from-white to-blue-50/40 rounded-3xl p-5 border border-blue-200/80 shadow-xs relative overflow-hidden">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-blue-500/20">
+          📱
+        </div>
+        <div>
+          <h4 class="text-sm font-extrabold text-slate-900">Pago Móvil (Venezuela)</h4>
+          <p class="text-[11px] text-blue-700 font-bold flex items-center space-x-1.5 mt-0.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Tasa Oficial BCV: <strong>1 USD = <%= sprintf('%.2f', payment_setting.usd_to_bs_rate) %> Bs.</strong></span>
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-2.5 text-xs font-medium">
+        <!-- Monto a Transferir en Bolívares y Tasa Oficial -->
+        <div class="p-3.5 bg-gradient-to-br from-blue-50 to-blue-100/60 rounded-2xl border border-blue-200 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold text-blue-600 block">Monto a Transferir</span>
+              <span class="text-xl font-black text-blue-950 font-mono tracking-tight"><%= sprintf('%.2f', payment_setting.amount_in_bs) %> Bs.</span>
+            </div>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= sprintf('%.2f', payment_setting.amount_in_bs) %>'); alert('¡Monto de <%= sprintf('%.2f', payment_setting.amount_in_bs) %> Bs copiado!');" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-xs cursor-pointer active:scale-95" title="Copiar monto">
+              <span>📋</span>
+              <span>Copiar Bs</span>
+            </button>
+          </div>
+          <div class="mt-2 pt-2 border-t border-blue-200/80 flex items-center justify-between text-[11px] text-blue-800 font-medium">
+            <span class="flex items-center space-x-1">
+              <span>🏛️</span>
+              <span>Tasa Oficial BCV (<%= payment_setting.formatted_rate_date %>):</span>
+            </span>
+            <span class="font-extrabold font-mono text-blue-950"><%= sprintf('%.2f', payment_setting.usd_to_bs_rate) %> Bs.</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-blue-100">
+          <span class="text-slate-500">Banco:</span>
+          <span class="font-bold text-slate-900"><%= payment_setting.pago_movil_bank %></span>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-blue-100">
+          <span class="text-slate-500">Teléfono:</span>
+          <div class="flex items-center space-x-1.5">
+            <span id="copy-phone" class="font-mono font-bold text-slate-900"><%= payment_setting.pago_movil_phone %></span>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= payment_setting.pago_movil_phone %>'); alert('¡Teléfono copiado!');" class="p-1 text-slate-400 hover:text-blue-600 transition" title="Copiar">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-blue-100">
+          <span class="text-slate-500">Cédula:</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="font-mono font-bold text-slate-900"><%= payment_setting.pago_movil_id_number %></span>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= payment_setting.pago_movil_id_number %>'); alert('¡Cédula copiada!');" class="p-1 text-slate-400 hover:text-blue-600 transition" title="Copiar">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-blue-100">
+          <span class="text-slate-500">Titular:</span>
+          <span class="font-bold text-slate-900"><%= payment_setting.pago_movil_holder_name %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta Binance -->
+    <div class="bg-gradient-to-br from-white to-amber-50/40 rounded-3xl p-5 border border-amber-200/80 shadow-xs relative overflow-hidden">
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-lg font-bold shadow-md shadow-amber-500/20">
+          🟡
+        </div>
+        <div>
+          <h4 class="text-sm font-extrabold text-slate-900">Binance Pay / USDT</h4>
+          <p class="text-[11px] text-amber-700 font-semibold">Cero comisiones con Binance Pay</p>
+        </div>
+      </div>
+
+      <div class="space-y-2.5 text-xs font-medium">
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-amber-100">
+          <span class="text-slate-500">Binance Pay ID:</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="font-mono font-bold text-slate-900"><%= payment_setting.binance_pay_id %></span>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= payment_setting.binance_pay_id %>'); alert('¡Binance Pay ID copiado!');" class="p-1 text-slate-400 hover:text-amber-600 transition" title="Copiar">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-amber-100">
+          <span class="text-slate-500">Correo Binance:</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="font-mono font-bold text-slate-900 truncate max-w-[140px]"><%= payment_setting.binance_email %></span>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= payment_setting.binance_email %>'); alert('¡Correo Binance copiado!');" class="p-1 text-slate-400 hover:text-amber-600 transition" title="Copiar">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 bg-white/80 rounded-xl border border-amber-100">
+          <span class="text-slate-500">Red:</span>
+          <span class="font-bold text-amber-800"><%= payment_setting.binance_network %></span>
+        </div>
+
+        <div class="p-2.5 bg-white/80 rounded-xl border border-amber-100">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-slate-500">Dirección USDT:</span>
+            <button type="button" onclick="navigator.clipboard.writeText('<%= payment_setting.binance_usdt_address %>'); alert('¡Dirección USDT copiada!');" class="text-xs font-bold text-amber-700 hover:underline">
+              Copiar Dirección
+            </button>
+          </div>
+          <p class="font-mono text-[11px] text-slate-800 break-all bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+            <%= payment_setting.binance_usdt_address %>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

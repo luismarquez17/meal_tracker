@@ -1,0 +1,304 @@
+<%
+  prev_month = @date.prev_month
+  next_month = @date.next_month
+  currency = current_setting.currency_symbol
+  mes_nombre = spanish_month_name(@date)
+%>
+
+<div class="space-y-4">
+  <!-- Encabezado Ejecutivo para Impresión / PDF (Visible solo al imprimir) -->
+  <div class="hidden print:block mb-6 border-b-2 border-slate-900 pb-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-700 text-white flex items-center justify-center text-2xl font-black">
+          🍲
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-slate-900 leading-tight">MealTracker · Reporte Ejecutivo</h1>
+          <p class="text-xs text-slate-500 font-medium">Control de Comidas, Gastos en Calle vs Casa y Ahorro</p>
+        </div>
+      </div>
+      <div class="text-right text-xs text-slate-600">
+        <p><strong class="text-slate-900">Período:</strong> <%= mes_nombre %></p>
+        <p><strong class="text-slate-900">Usuario:</strong> <%= current_user.email %></p>
+        <p><strong class="text-slate-900">Emitido:</strong> <%= Time.current.strftime("%d/%m/%Y %I:%M %p") %></p>
+        <p><strong class="text-slate-900">Tasa BCV:</strong> <%= sprintf('%.2f', @bcv_rate || PaymentSetting.current.usd_to_bs_rate) %> Bs/USD</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Superior de Control: Selector de Mes & Botón Imprimir/Guardar PDF -->
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
+    <!-- Selector de Mes -->
+    <div class="bg-white rounded-3xl p-2.5 sm:p-3 shadow-2xs border border-slate-100 flex items-center justify-between flex-1">
+      <%= link_to analytics_path(date: prev_month), class: "w-9 h-9 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95 shadow-2xs", title: "Mes anterior" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+        </svg>
+      <% end %>
+
+      <div class="text-center px-3">
+        <span class="text-[10px] font-semibold text-amber-600 uppercase tracking-wider block">Gastos en la Calle</span>
+        <h2 class="text-sm sm:text-base font-extrabold text-slate-900"><%= mes_nombre %></h2>
+      </div>
+
+      <%= link_to analytics_path(date: next_month), class: "w-9 h-9 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95 shadow-2xs", title: "Mes siguiente" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+      <% end %>
+    </div>
+
+    <!-- Botón Exportar / Imprimir Reporte PDF -->
+    <button type="button"
+            onclick="window.print()"
+            class="px-4 py-3 sm:py-2.5 rounded-3xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer active:scale-95 shrink-0"
+            title="Generar o Imprimir informe en PDF">
+      <span class="text-base">📄</span>
+      <span>Imprimir / Guardar en PDF</span>
+    </button>
+  </div>
+
+  <!-- Métricas Principales de Gasto en Calle (Grid 2x2) -->
+  <div class="grid grid-cols-2 gap-3">
+    <!-- Gasto Total en la Calle -->
+    <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-2xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1">
+        <span>Total Gastado</span>
+        <span class="text-base">🍔</span>
+      </div>
+      <div class="text-2xl font-black text-rose-600">
+        <%= currency %><%= number_with_precision(@total_street_spent, precision: 2) %>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1">
+        en comida fuera este mes
+      </div>
+    </div>
+
+    <!-- Promedio por Comida Fuera -->
+    <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-2xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1">
+        <span>Promedio por Salida</span>
+        <span class="text-base">💳</span>
+      </div>
+      <div class="text-2xl font-black text-slate-800">
+        <%= currency %><%= number_with_precision(@avg_street_cost, precision: 2) %>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1">
+        por comida en restaurante
+      </div>
+    </div>
+
+    <!-- Salidas a Comer Fuera -->
+    <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-2xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1">
+        <span>Comidas en la Calle</span>
+        <span class="text-base">📍</span>
+      </div>
+      <div class="text-xl font-black text-amber-600">
+        <%= @street_count %>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1">
+        <%= @street_ratio %>% de tus comidas totales
+      </div>
+    </div>
+
+    <!-- Comidas en Casa -->
+    <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-2xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-medium mb-1">
+        <span>Comidas en Casa</span>
+        <span class="text-base">🏠</span>
+      </div>
+      <div class="text-xl font-black text-emerald-600">
+        <%= @home_count %>
+      </div>
+      <div class="text-[11px] text-slate-400 mt-1">
+        <%= @home_ratio %>% de tus comidas totales
+      </div>
+    </div>
+  </div>
+
+  <!-- Detector de Gastos Hormiga del Mes -->
+  <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white rounded-3xl p-5 border border-amber-200/80 shadow-xs space-y-4">
+    <div class="flex items-start justify-between flex-wrap gap-2">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center text-xl font-black shadow-md shadow-amber-500/20">
+          🔍
+        </div>
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 leading-tight">Detector de Gastos Hormiga</h3>
+          <p class="text-xs text-slate-500">Antojos, pasajes, café y compras imprevistas del mes</p>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <span class="text-2xl font-black text-rose-600 font-mono">$<%= sprintf('%.2f', @micro_total_spent) %></span>
+        <span class="block text-xs font-bold text-slate-500 font-mono">≈ <%= sprintf('%.2f', @micro_total_spent_bs) %> Bs</span>
+      </div>
+    </div>
+
+    <% if @potential_savings > 0 %>
+      <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-2">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">💡</span>
+          <div>
+            <span class="text-xs font-extrabold text-emerald-900 block">Potencial de Ahorro Mensual</span>
+            <span class="text-[11px] text-emerald-700">Reduciendo solo un 35% de estos micro-gastos ahorrarías:</span>
+          </div>
+        </div>
+        <span class="text-sm font-black text-emerald-800 font-mono whitespace-nowrap">+$<%= sprintf('%.2f', @potential_savings) %> USD</span>
+      </div>
+    <% end %>
+
+    <!-- Desglose por categoría de gasto hormiga -->
+    <% if @micro_categories.any? %>
+      <div class="space-y-2 pt-1">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block px-1">En qué se fue el dinero</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <% @micro_categories.each do |cat| %>
+            <div class="p-2.5 bg-white rounded-2xl border border-slate-100 flex items-center justify-between shadow-2xs">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg"><%= cat[:icon] %></span>
+                <div>
+                  <span class="text-xs font-bold text-slate-800 block"><%= cat[:label] %></span>
+                  <span class="text-[10px] text-slate-400"><%= cat[:count] %> <%= cat[:count] == 1 ? 'registro' : 'registros' %></span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-black text-slate-900 font-mono block">$<%= sprintf('%.2f', cat[:total]) %></span>
+                <span class="text-[10px] text-slate-400 font-mono block">≈ <%= sprintf('%.2f', cat[:total_bs]) %> Bs</span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-xs text-slate-400 text-center py-2">
+        No has registrado gastos hormiga este mes. ¡Usa los botones rápidos del Diario!
+      </p>
+    <% end %>
+  </div>
+
+  <!-- Gráficos Interactivos -->
+  <div class="space-y-4">
+    <!-- Gráfico 1: Dona de Comidas (Casa vs Calle) -->
+    <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-100 shadow-2xs">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+          <span>📊</span>
+          <span>Frecuencia: Casa vs Calle</span>
+        </h3>
+        <% if @total_count.positive? %>
+          <button type="button"
+                  onclick="downloadCanvasChart('chart-donut-canvas', 'comidas_casa_vs_calle')"
+                  class="no-print text-xs font-bold text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 px-2.5 py-1 rounded-xl transition flex items-center space-x-1 cursor-pointer"
+                  title="Descargar este gráfico como imagen PNG">
+            <span>📸</span>
+            <span class="hidden sm:inline">Guardar</span><span>PNG</span>
+          </button>
+        <% end %>
+      </div>
+      <% if @total_count.positive? %>
+        <div class="h-56 relative flex items-center justify-center">
+          <canvas id="chart-donut-canvas"
+                  data-controller="chart"
+                  data-chart-title="comidas_casa_vs_calle"
+                  data-chart-type-value="doughnut"
+                  data-chart-data-value="<%= @donut_chart_data.to_json %>"
+                  data-chart-options-value="<%= { cutout: '65%' }.to_json %>"></canvas>
+        </div>
+      <% else %>
+        <div class="h-44 flex flex-col items-center justify-center text-slate-400 text-xs">
+          <span class="text-3xl mb-1.5">🍽️</span>
+          <span>Aún no hay comidas registradas este mes</span>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Gráfico 2: Desglose de Gastos en Calle por Tipo de Comida -->
+    <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-100 shadow-2xs">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <span>🍽️</span>
+            <span>Gasto en Calle por Horario</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">En qué horario se gasta más dinero comiendo fuera.</p>
+        </div>
+        <% if @street_count.positive? %>
+          <button type="button"
+                  onclick="downloadCanvasChart('chart-type-canvas', 'gasto_calle_por_horario')"
+                  class="no-print text-xs font-bold text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 px-2.5 py-1 rounded-xl transition flex items-center space-x-1 cursor-pointer shrink-0"
+                  title="Descargar este gráfico como imagen PNG">
+            <span>📸</span>
+            <span class="hidden sm:inline">Guardar</span><span>PNG</span>
+          </button>
+        <% end %>
+      </div>
+      <% if @street_count.positive? %>
+        <div class="h-60 mt-3">
+          <canvas id="chart-type-canvas"
+                  data-controller="chart"
+                  data-chart-title="gasto_calle_por_horario"
+                  data-chart-type-value="bar"
+                  data-chart-data-value="<%= @type_chart_data.to_json %>"></canvas>
+        </div>
+      <% else %>
+        <div class="h-44 flex flex-col items-center justify-center text-slate-400 text-xs">
+          <span class="text-3xl mb-1.5">🍔</span>
+          <span>No hay gastos en la calle registrados este mes</span>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Gráfico 3: Histórico de los últimos 6 meses -->
+    <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-100 shadow-2xs">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+            <span>📈</span>
+            <span>Evolución Mensual del Gasto</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Total gastado en restaurantes y comida callejera por mes.</p>
+        </div>
+        <button type="button"
+                onclick="downloadCanvasChart('chart-trend-canvas', 'evolucion_mensual_gasto')"
+                class="no-print text-xs font-bold text-slate-500 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 px-2.5 py-1 rounded-xl transition flex items-center space-x-1 cursor-pointer shrink-0"
+                title="Descargar este gráfico como imagen PNG">
+          <span>📸</span>
+          <span class="hidden sm:inline">Guardar</span><span>PNG</span>
+        </button>
+      </div>
+      <div class="h-60 mt-3">
+        <canvas id="chart-trend-canvas"
+                data-controller="chart"
+                data-chart-title="evolucion_mensual_gasto"
+                data-chart-type-value="bar"
+                data-chart-data-value="<%= @trend_chart_data.to_json %>"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Lugares de Comida Fuera -->
+  <% if @top_places.any? %>
+    <div class="bg-white rounded-3xl p-4 md:p-5 border border-slate-100 shadow-2xs">
+      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center space-x-2">
+        <span>📍</span>
+        <span>Dónde más se gasta comiendo fuera</span>
+      </h3>
+      <div class="divide-y divide-slate-100">
+        <% @top_places.each do |item| %>
+          <div class="py-2.5 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-slate-800 text-sm"><%= item[:place] %></div>
+              <div class="text-xs text-slate-400"><%= item[:count] %> <%= item[:count] == 1 ? "visita" : "visitas" %></div>
+            </div>
+            <div class="font-black text-rose-600 text-sm">
+              <%= currency %><%= number_with_precision(item[:total], precision: 2) %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,112 @@
+<div id="subscription_status_card" class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+  <% last_payment = local_assigns[:last_payment] || user.payments.recent_first.first %>
+
+  <div class="flex items-start justify-between flex-wrap gap-3">
+    <div class="flex items-center space-x-3.5">
+      <div class="w-12 h-12 rounded-2xl <%= user.admin? ? 'bg-amber-100 text-amber-700' : (user.active_subscription? ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700') %> flex items-center justify-center text-2xl shrink-0">
+        <%= user.admin? ? '👑' : (user.active_subscription? ? '✨' : '⚠️') %>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h2 class="text-base font-extrabold text-slate-900">Estado de Membresía</h2>
+          <% if user.admin? %>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-200">
+              Super Admin
+            </span>
+          <% elsif user.active_subscription? %>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+              Activa
+            </span>
+          <% else %>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+              Vencida
+            </span>
+          <% end %>
+        </div>
+        
+        <p class="text-xs text-slate-500 mt-0.5">
+          <%= user.name %> • <%= user.email %>
+        </p>
+      </div>
+    </div>
+
+    <!-- Días restantes -->
+    <% unless user.admin? %>
+      <div class="text-right">
+        <% if user.active_subscription? %>
+          <div class="text-2xl font-black text-emerald-600 leading-tight">
+            <%= user.days_left_in_subscription %>
+          </div>
+          <p class="text-[11px] font-bold text-slate-400">días restantes</p>
+        <% else %>
+          <div class="text-lg font-black text-rose-600 leading-tight">
+            0 días
+          </div>
+          <p class="text-[11px] font-bold text-slate-400">membresía inactiva</p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Detalles de la fecha -->
+  <div class="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 gap-2">
+    <div>
+      <% if user.admin? %>
+        <span class="text-amber-700 font-semibold">Acceso total e ilimitado de por vida.</span>
+      <% elsif user.subscription_expires_at.present? %>
+        <span>Vigencia hasta: <strong><%= user.subscription_expires_at.strftime("%d de %B de %Y") %></strong></span>
+      <% else %>
+        <span class="text-rose-600 font-semibold">No tienes una suscripción activa actualmente.</span>
+      <% end %>
+    </div>
+
+    <div class="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl w-fit">
+      Plan Mensual: $2.00 USD / 30 días
+    </div>
+  </div>
+
+  <!-- Si hay un pago pendiente en revisión -->
+  <% if last_payment.present? && last_payment.pending? %>
+    <div class="mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900">
+      <div class="flex items-start space-x-3">
+        <span class="text-xl">⏳</span>
+        <div class="text-xs">
+          <p class="font-bold">Pago en revisión por el Administrador</p>
+          <p class="text-amber-800 mt-0.5">
+            Enviaste el reporte <strong>#<%= last_payment.reference_number %></strong> por <%= last_payment.human_method %> ($<%= sprintf('%.2f', last_payment.amount) %>). En cuanto el admin lo apruebe, se activarán tus 30 días automáticamente.
+          </p>
+        </div>
+      </div>
+      <% if last_payment.receipt.attached? %>
+        <div class="mt-2.5 pt-2 border-t border-amber-200/70 flex items-center justify-between gap-2">
+          <div class="flex items-center space-x-2">
+            <% if last_payment.receipt.content_type.to_s.start_with?("image/") %>
+              <div class="cursor-pointer shrink-0" onclick="document.getElementById('client_receipt_modal').classList.remove('hidden')">
+                <img src="<%= url_for(last_payment.receipt) %>" alt="Comprobante" class="w-10 h-10 object-cover rounded-lg border border-amber-300 shadow-2xs hover:scale-105 transition-transform" />
+              </div>
+            <% end %>
+            <div>
+              <p class="text-[11px] text-amber-900 font-bold">Comprobante enviado</p>
+              <p class="text-[10px] text-amber-700">Toca la foto para ampliar</p>
+            </div>
+          </div>
+          <button type="button" onclick="document.getElementById('client_receipt_modal').classList.remove('hidden')" class="inline-flex items-center space-x-1 text-[11px] font-bold text-amber-950 bg-white/90 hover:bg-white px-2.5 py-1 rounded-lg border border-amber-300 shadow-2xs transition cursor-pointer">
+            <span>🔍 Ampliar</span>
+          </button>
+        </div>
+
+        <div id="client_receipt_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target === this) this.classList.add('hidden')">
+          <div class="relative bg-white rounded-3xl max-w-lg w-full p-4 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <h3 class="text-xs font-bold text-slate-800">Tu Comprobante Enviado</h3>
+              <button type="button" onclick="document.getElementById('client_receipt_modal').classList.add('hidden')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs cursor-pointer">✕</button>
+            </div>
+            <div class="my-2 flex items-center justify-center bg-slate-50 rounded-xl p-2 max-h-[65vh] overflow-hidden">
+              <img src="<%= url_for(last_payment.receipt) %>" alt="Comprobante" class="max-h-[60vh] max-w-full object-contain rounded-lg" />
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

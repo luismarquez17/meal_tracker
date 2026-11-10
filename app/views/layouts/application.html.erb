@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es" class="min-h-full bg-slate-100">
+  <head>
+    <title>Meal Tracker - Control de Comidas y Ahorro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <script src="/chart.umd.min.js"></script>
+    <%= javascript_importmap_tags %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#059669">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MealTracker">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+    </style>
+    <script>
+      document.documentElement.className = "min-h-full bg-slate-100";
+      document.addEventListener("turbo:load", function() {
+        if (!window.location.pathname.startsWith("/admin")) {
+          document.documentElement.className = "min-h-full bg-slate-100";
+          if (document.body) {
+            document.body.className = "min-h-screen bg-slate-100 text-slate-800 antialiased selection:bg-emerald-500 selection:text-white flex flex-col justify-between";
+          }
+        }
+      });
+    </script>
+  </head>
+
+  <body class="min-h-screen bg-slate-100 text-slate-800 antialiased selection:bg-emerald-500 selection:text-white flex flex-col justify-between" data-controller="pwa-install">
+    <!-- Turbo Streams en vivo para suscripción de este usuario -->
+    <% if logged_in? %>
+      <%= turbo_stream_from "user_#{current_user.id}_subscription" %>
+    <% end %>
+
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="<%= root_path %>" class="flex items-center space-x-2.5 group shrink-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+            <span class="text-xl">🍲</span>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-none">Meal<span class="text-emerald-600">Tracker</span></h1>
+            <p class="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">Control Calle vs Casa</p>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-1.5">
+          <!-- Botón Instalar PWA -->
+          <button type="button"
+                  data-action="click->pwa-install#install"
+                  class="px-2.5 py-1.5 rounded-full text-xs font-bold text-emerald-800 bg-emerald-100/90 hover:bg-emerald-200 transition flex items-center space-x-1 cursor-pointer shrink-0"
+                  title="Instalar MealTracker en tu teléfono o computadora">
+            <span>📲</span>
+            <span class="hidden xl:inline">Instalar App</span>
+          </button>
+
+          <% if logged_in? %>
+            <%= link_to root_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(root_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+              📅 Diario
+            <% end %>
+            <%= link_to weekly_summary_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(weekly_summary_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+              ✨ Wrapped
+            <% end %>
+            <%= link_to (current_user.household.present? ? household_path : new_household_path), class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{request.path.start_with?('/household') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+              🏠 Hogar
+            <% end %>
+            <%= link_to analytics_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(analytics_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+              📊 Mes & Ahorro
+            <% end %>
+            <%= link_to meal_logs_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(meal_logs_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
+              📜 Historial
+            <% end %>
+
+            <!-- Badge / Enlace de Suscripción -->
+            <%= link_to subscription_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center space-x-1 shrink-0 #{current_page?(subscription_path) ? 'bg-emerald-100 text-emerald-800' : 'text-slate-600 hover:bg-slate-100'}" do %>
+              <span>⭐</span>
+              <% if current_user.admin? %>
+                <span>Plan VIP</span>
+              <% elsif current_user.active_subscription? %>
+                <span><%= current_user.days_left_in_subscription %>d</span>
+              <% else %>
+                <span class="text-rose-600">Renovar ($2)</span>
+              <% end %>
+            <% end %>
+
+            <!-- Si es Super Admin, acceso destacado al panel -->
+            <% if current_user.admin? %>
+              <%= link_to admin_dashboard_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition flex items-center space-x-1 shrink-0" do %>
+                <span>👑 Panel Admin</span>
+                <% if Payment.pending.any? %>
+                  <span class="px-1.5 py-0.2 bg-slate-950 text-amber-300 rounded-full text-[10px]">
+                    <%= Payment.pending.count %>
+                  </span>
+                <% end %>
+              <% end %>
+            <% end %>
+
+            <%= link_to setting_path, class: "p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition shrink-0", title: "Ajustes" do %>
+              ⚙️
+            <% end %>
+
+            <%= link_to logout_path, class: "p-2 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0", title: "Cerrar Sesión" do %>
+              🚪
+            <% end %>
+          <% else %>
+            <%= link_to login_path, class: "px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition shrink-0" do %>
+              Iniciar Sesión
+            <% end %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Banner de Suscripción Expirada (si aplica) -->
+    <% if logged_in? && !current_user.admin? && !current_user.active_subscription? %>
+      <div class="bg-rose-600 text-white px-4 py-2.5 shadow-md">
+        <div class="max-w-2xl lg:max-w-4xl mx-auto flex items-center justify-between text-xs font-bold gap-2">
+          <div class="flex items-center space-x-2">
+            <span>⚠️</span>
+            <span>Tu suscripción ha vencido. Renueva por solo <strong>$2.00 mensuales</strong> para seguir usando todas las funciones.</span>
+          </div>
+          <%= link_to "Renovar Ahora", subscription_path, class: "px-3 py-1 bg-white text-rose-700 rounded-lg text-xs font-black shadow-xs shrink-0 hover:bg-rose-50 transition" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Flash Messages -->
+    <% if notice.present? %>
+      <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
+        <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs animate-fade-in">
+          <div class="flex items-center space-x-2">
+            <span>✨</span>
+            <span><%= notice %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if alert.present? %>
+      <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
+        <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
+          <div class="flex items-center space-x-2">
+            <span>⚠️</span>
+            <span><%= alert %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-auto px-4 py-4 flex-1 pb-20 md:pb-6">
+      <%= yield %>
+    </main>
+
+    <!-- Mobile Sticky Bottom Navigation Bar -->
+    <% if logged_in? %>
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/90 shadow-lg px-4 py-2 flex items-center justify-around pb-safe">
+        <%= link_to root_path, class: "flex flex-col items-center py-1 group #{current_page?(root_path) ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
+          <span class="text-xl">📅</span>
+          <span class="text-[10px] mt-0.5 font-medium">Diario</span>
+        <% end %>
+
+        <%= link_to weekly_summary_path, class: "flex flex-col items-center py-1 group #{current_page?(weekly_summary_path) ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
+          <span class="text-xl">✨</span>
+          <span class="text-[10px] mt-0.5 font-medium">Wrapped</span>
+        <% end %>
+
+        <%= link_to (current_user.household.present? ? household_path : new_household_path), class: "flex flex-col items-center py-1 group #{request.path.start_with?('/household') ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
+          <span class="text-xl">🏠</span>
+          <span class="text-[10px] mt-0.5 font-medium">Hogar</span>
+        <% end %>
+
+        <%= link_to analytics_path, class: "flex flex-col items-center py-1 group #{current_page?(analytics_path) ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
+          <span class="text-xl">📊</span>
+          <span class="text-[10px] mt-0.5 font-medium">Ahorro</span>
+        <% end %>
+
+        <% if current_user.admin? %>
+          <%= link_to admin_dashboard_path, class: "flex flex-col items-center py-1 group text-amber-600 font-bold relative" do %>
+            <span class="text-xl">👑</span>
+            <span class="text-[10px] mt-0.5 font-bold">Admin</span>
+            <% if Payment.pending.any? %>
+              <span class="absolute top-0 right-2 w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            <% end %>
+          <% end %>
+        <% else %>
+          <%= link_to subscription_path, class: "flex flex-col items-center py-1 group #{current_page?(subscription_path) ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
+            <span class="text-xl">⭐</span>
+            <span class="text-[10px] mt-0.5 font-medium">Plan $2</span>
+          <% end %>
+        <% end %>
+      </nav>
+    <% end %>
+
+    <!-- PWA Install Banner (Floating) -->
+    <div data-pwa-install-target="banner" style="display: none;" class="hidden fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50 bg-slate-900/95 backdrop-blur-md text-white p-4 rounded-3xl shadow-2xl border border-emerald-500/30 flex items-center justify-between gap-3 animate-fade-in no-print">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white text-xl shrink-0 shadow-md shadow-emerald-500/30">
+          🍲
+        </div>
+        <div>
+          <h4 class="text-xs font-black text-white">Instalar MealTracker</h4>
+          <p class="text-[11px] text-slate-300">Úsala como una app en tu pantalla de inicio</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1.5 shrink-0">
+        <button type="button" data-action="click->pwa-install#install" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer">
+          Instalar
+        </button>
+        <button type="button" data-action="click->pwa-install#dismissBanner" class="p-1.5 text-slate-400 hover:text-white rounded-lg transition cursor-pointer" title="Cerrar">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- PWA Install Instructions Modal -->
+    <div data-pwa-install-target="modal" style="display: none;" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs no-print">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white text-lg">
+              🍲
+            </div>
+            <div>
+              <h3 class="text-sm font-black text-slate-900">Cómo Instalar la App</h3>
+              <p class="text-[11px] text-slate-500">MealTracker en tu teléfono</p>
+            </div>
+          </div>
+          <button type="button" data-action="click->pwa-install#closeModal" class="p-1 text-slate-400 hover:text-slate-700 text-sm cursor-pointer">
+            ✕
+          </button>
+        </div>
+
+        <!-- iOS Instructions -->
+        <div data-pwa-install-target="iosGuide" class="space-y-3">
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs">
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+              <span>Toca el botón <strong>Compartir</strong> <span class="inline-block px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[11px]">⬆️</span> en Safari (barra inferior).</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+              <span>Baja en las opciones y selecciona <strong>"Agregar a pantalla de inicio"</strong> ➕.</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+              <span>Toca <strong>"Agregar"</strong> arriba a la derecha. ¡Listo!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android / Other Instructions -->
+        <div data-pwa-install-target="androidGuide" class="hidden space-y-3">
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs">
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+              <span>Toca los <strong>3 puntos</strong> ⋮ en la esquina superior de Chrome.</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+              <span>Selecciona <strong>"Instalar aplicación"</strong> o "Agregar a pantalla principal".</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+              <span>Confirma en <strong>"Instalar"</strong>.</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" data-action="click->pwa-install#closeModal" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer">
+          Entendido
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Registro de Service Worker para PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(function(reg) {
+              console.log('[PWA] Service Worker registrado con éxito:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[PWA] Error registrando Service Worker:', err);
+            });
+        });
+      }
+
+      // Función global para exportar cualquier gráfico de Canvas a PNG con fondo blanco y marca de agua
+      window.downloadCanvasChart = function(canvasId, filename) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+          console.warn('[Export] Canvas no encontrado:', canvasId);
+          return;
+        }
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const name = (filename || 'grafica') + '_' + dateStr;
+
+        // Crear un canvas temporal para asegurar fondo blanco nítido
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Rellenar fondo blanco
+        tempCtx.fillStyle = '#ffffff';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Copiar el gráfico del canvas original
+        tempCtx.drawImage(canvas, 0, 0);
+
+        // Marca de agua sutil y elegante
+        tempCtx.fillStyle = '#94a3b8';
+        tempCtx.font = "bold 13px 'Plus Jakarta Sans', system-ui, sans-serif";
+        tempCtx.textAlign = 'right';
+        tempCtx.fillText('🍲 MealTracker App', tempCanvas.width - 16, tempCanvas.height - 12);
+
+        // Descargar como archivo PNG
+        const link = document.createElement('a');
+        link.download = name + '.png';
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+    </script>
+  </body>
+</html>

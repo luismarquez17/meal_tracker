@@ -1,0 +1,182 @@
+<div class="space-y-6 max-w-3xl mx-auto">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-black text-white flex items-center space-x-2">
+        <span>Configuración de Métodos de Pago</span>
+      </h1>
+      <p class="text-xs text-slate-400">Personaliza tus datos de Pago Móvil y Binance que ven los clientes para pagar sus $2/mes.</p>
+    </div>
+
+    <%= link_to admin_dashboard_path, class: "px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition" do %>
+      ← Dashboard
+    <% end %>
+  </div>
+
+  <!-- Tarjeta de Sincronización Automática con el BCV -->
+  <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/40 rounded-3xl p-5 border border-blue-500/30 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-2xl shrink-0">
+          🏛️
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-sm font-extrabold text-white">Tasa Oficial del Banco Central de Venezuela (BCV)</h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+              En Vivo
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Tasa actual: <strong class="text-amber-400 font-mono text-sm"><%= sprintf('%.2f', @payment_setting.usd_to_bs_rate) %> Bs / USD</strong>
+            • Monto por cliente ($2): <strong class="text-emerald-400 font-mono text-sm"><%= sprintf('%.2f', @payment_setting.amount_in_bs) %> Bs</strong>
+          </p>
+          <p class="text-[11px] text-slate-500 mt-1">
+            Fuente: <span class="text-slate-400 font-medium"><%= @payment_setting.rate_source || "BCV Oficial" %></span>
+            <% if @payment_setting.rate_updated_at.present? %>
+              • Actualizada: <span class="text-slate-400 font-medium"><%= @payment_setting.formatted_rate_updated_at %></span>
+            <% end %>
+          </p>
+        </div>
+      </div>
+
+      <div class="shrink-0">
+        <%= button_to sync_bcv_admin_payment_setting_path, method: :post, class: "w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 active:scale-95 transition flex items-center justify-center space-x-2 cursor-pointer" do %>
+          <span>🔄</span>
+          <span>Sincronizar BCV Ahora</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%= form_with model: @payment_setting, url: admin_payment_setting_path, method: :patch, class: "space-y-6" do |f| %>
+    <!-- Precio Mensual y Tasa en Bolívares -->
+    <div class="bg-slate-900/90 rounded-3xl p-5 border border-slate-800 shadow-xs space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-bold">
+          💵
+        </div>
+        <div>
+          <h2 class="text-sm font-extrabold text-white">Tarifa Mensual y Configuración de Tasa</h2>
+          <p class="text-xs text-slate-400">Personaliza la tarifa mensual y el modo de actualización de la tasa en bolívares.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Monto Mensual ($ USD)</label>
+          <%= f.number_field :monthly_price_usd, step: "0.01", required: true, id: "admin_monthly_price_usd", oninput: "recalculateBs()", class: "w-full px-3.5 py-2.5 text-base font-black text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Tasa del Dólar (Bs / USD)</label>
+          <%= f.number_field :usd_to_bs_rate, step: "0.01", required: true, placeholder: "Ej. 897.54", id: "admin_usd_to_bs_rate", oninput: "recalculateBs()", class: "w-full px-3.5 py-2.5 text-base font-black text-amber-400 bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+          <p class="text-[11px] text-slate-500 mt-1">
+            Total a transferir por el cliente: <strong id="calculated_bs_display" class="text-emerald-400"><%= sprintf('%.2f', @payment_setting.amount_in_bs) %> Bs.</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800/80">
+        <label class="inline-flex items-center space-x-2.5 cursor-pointer">
+          <%= f.check_box :auto_update_rate, class: "w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-700 focus:ring-blue-500" %>
+          <span class="text-xs font-bold text-slate-300">
+            Actualizar automáticamente la tasa con el BCV todos los días
+          </span>
+        </label>
+        <p class="text-[11px] text-slate-500 ml-6">
+          Al estar activado, la app consulta la tasa oficial de Venezuela diariamente de forma transparente.
+        </p>
+      </div>
+    </div>
+
+    <!-- Sección Pago Móvil -->
+    <div class="bg-slate-900/90 rounded-3xl p-5 border border-slate-800 shadow-xs space-y-4">
+      <div class="flex items-center space-x-3 pb-2 border-b border-slate-800">
+        <div class="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg font-bold">
+          📱
+        </div>
+        <div>
+          <h2 class="text-sm font-extrabold text-white">Datos de Pago Móvil (Venezuela)</h2>
+          <p class="text-xs text-slate-400">Tus datos bancarios para recibir pagos en Bolívares.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Banco</label>
+          <%= f.text_field :pago_movil_bank, placeholder: "0102 - Banco de Venezuela", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Número de Teléfono</label>
+          <%= f.text_field :pago_movil_phone, placeholder: "0412-1234567", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Cédula de Identidad</label>
+          <%= f.text_field :pago_movil_id_number, placeholder: "V-26123456", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Nombre del Titular</label>
+          <%= f.text_field :pago_movil_holder_name, placeholder: "Luis Márquez", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección Binance -->
+    <div class="bg-slate-900/90 rounded-3xl p-5 border border-slate-800 shadow-xs space-y-4">
+      <div class="flex items-center space-x-3 pb-2 border-b border-slate-800">
+        <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg font-bold">
+          🟡
+        </div>
+        <div>
+          <h2 class="text-sm font-extrabold text-white">Datos de Binance Pay y USDT</h2>
+          <p class="text-xs text-slate-400">Tus datos para recibir criptomonedas directamente en Binance.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Binance Pay ID</label>
+          <%= f.text_field :binance_pay_id, placeholder: "87654321", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Correo Electrónico de Binance</label>
+          <%= f.email_field :binance_email, placeholder: "luismarquezocando2006@gmail.com", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Red Cripto</label>
+          <%= f.text_field :binance_network, placeholder: "TRC20 (Tron)", required: true, class: "w-full px-3.5 py-2.5 text-xs font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1">Dirección de Billetera USDT</label>
+          <%= f.text_field :binance_usdt_address, placeholder: "TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", required: true, class: "w-full px-3.5 py-2.5 text-xs font-mono font-bold text-white bg-slate-950 border border-slate-800 rounded-2xl focus:border-amber-500 focus:outline-hidden" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón Guardar -->
+    <div class="pt-2">
+      <button type="submit" class="w-full py-3.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 active:scale-[0.98] transition flex items-center justify-center space-x-2 cursor-pointer">
+        <span>💾</span>
+        <span>Guardar Cambios de Métodos de Pago</span>
+      </button>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function recalculateBs() {
+    const price = parseFloat(document.getElementById('admin_monthly_price_usd')?.value) || 0;
+    const rate = parseFloat(document.getElementById('admin_usd_to_bs_rate')?.value) || 0;
+    const totalBs = (price * rate).toFixed(2);
+    const display = document.getElementById('calculated_bs_display');
+    if (display) display.innerText = totalBs + ' Bs.';
+  }
+</script>

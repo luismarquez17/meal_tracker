@@ -1,0 +1,20 @@
+<div id="meal_reactions_<%= meal.id %>" class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100/80">
+  <span class="text-[11px] font-bold text-slate-400 mr-0.5">Reaccionar:</span>
+
+  <% MealReaction::ALLOWED_EMOJIS.each do |emoji| %>
+    <%
+      reacted = meal.reacted_by?(current_user, emoji)
+      count = meal.meal_reactions.where(emoji: emoji).count
+    %>
+    <%= button_to meal_log_meal_reactions_path(meal, emoji: emoji),
+                  method: :post,
+                  class: "px-2 py-1 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer active:scale-95 #{ reacted ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80' }",
+                  title: reacted ? "Quitar reacción #{emoji}" : "Reaccionar con #{emoji}",
+                  data: { turbo: true } do %>
+      <span><%= emoji %></span>
+      <% if count > 0 %>
+        <span class="text-[10px] <%= reacted ? 'text-emerald-800 font-black' : 'text-slate-500' %>"><%= count %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

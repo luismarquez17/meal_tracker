@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" class="min-h-full bg-slate-900">
+  <head>
+    <title>Super Admin - MealTracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <script src="/chart.umd.min.js"></script>
+    <%= javascript_importmap_tags %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+    </style>
+    <script>
+      document.documentElement.className = "min-h-full bg-slate-900";
+    </script>
+  </head>
+
+  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950 flex flex-col justify-between">
+    <!-- ActionCable / Turbo Streams para Notificaciones en Tiempo Real al Admin -->
+    <%= turbo_stream_from "admin_payments" %>
+    <div id="admin_audio_alert"></div>
+
+    <!-- Admin Top Bar -->
+    <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-md">
+      <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <%= link_to admin_dashboard_path, class: "flex items-center space-x-2.5 group" do %>
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <span class="text-xl">👑</span>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h1 class="text-base font-black tracking-tight text-white leading-none">Super<span class="text-amber-400">Admin</span></h1>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  MealTracker
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-medium mt-0.5"><%= current_user.email %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-1">
+          <%= link_to admin_dashboard_path, class: "px-3.5 py-1.5 rounded-full text-xs font-bold transition #{current_page?(admin_dashboard_path) ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+            📊 Métricas & Resumen
+          <% end %>
+
+          <%= link_to admin_payments_path, class: "px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center space-x-1.5 #{current_page?(admin_payments_path) ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+            <span>💳 Pagos</span>
+            <%= render "admin/payments/pending_badge", count: Payment.pending.count %>
+          <% end %>
+
+          <%= link_to admin_users_path, class: "px-3.5 py-1.5 rounded-full text-xs font-bold transition #{current_page?(admin_users_path) ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+            👥 Usuarios
+          <% end %>
+
+          <%= link_to edit_admin_payment_setting_path, class: "px-3.5 py-1.5 rounded-full text-xs font-bold transition #{current_page?(edit_admin_payment_setting_path) ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}" do %>
+            ⚙️ Pago Móvil & Binance
+          <% end %>
+        </nav>
+
+        <!-- Right Controls -->
+        <div class="flex items-center space-x-2">
+          <%= link_to root_path, class: "hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition" do %>
+            <span>🍲</span>
+            <span>Ver App</span>
+          <% end %>
+
+          <%= link_to logout_path, class: "p-2 rounded-xl bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 text-xs font-bold transition", title: "Cerrar Sesión" do %>
+            🚪
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    <% if notice.present? %>
+      <div class="max-w-4xl mx-auto px-4 mt-3 w-full">
+        <div class="p-3.5 bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
+          <div class="flex items-center space-x-2">
+            <span>✨</span>
+            <span><%= notice %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if alert.present? %>
+      <div class="max-w-4xl mx-auto px-4 mt-3 w-full">
+        <div class="p-3.5 bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
+          <div class="flex items-center space-x-2">
+            <span>⚠️</span>
+            <span><%= alert %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Main Admin Container -->
+    <main class="w-full max-w-5xl mx-auto px-4 py-6 flex-1">
+      <%= yield %>
+    </main>
+
+    <!-- Mobile Admin Bottom Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-4 py-2 flex items-center justify-around">
+      <%= link_to admin_dashboard_path, class: "flex flex-col items-center py-1 #{current_page?(admin_dashboard_path) ? 'text-amber-400 font-bold' : 'text-slate-400'}" do %>
+        <span class="text-lg">📊</span>
+        <span class="text-[10px] mt-0.5">Métricas</span>
+      <% end %>
+
+      <%= link_to admin_payments_path, class: "flex flex-col items-center py-1 relative #{current_page?(admin_payments_path) ? 'text-amber-400 font-bold' : 'text-slate-400'}" do %>
+        <span class="text-lg">💳</span>
+        <span class="text-[10px] mt-0.5">Pagos</span>
+        <div class="absolute -top-1 right-2">
+          <%= render "admin/payments/pending_badge", count: Payment.pending.count %>
+        </div>
+      <% end %>
+
+      <%= link_to admin_users_path, class: "flex flex-col items-center py-1 #{current_page?(admin_users_path) ? 'text-amber-400 font-bold' : 'text-slate-400'}" do %>
+        <span class="text-lg">👥</span>
+        <span class="text-[10px] mt-0.5">Usuarios</span>
+      <% end %>
+
+      <%= link_to edit_admin_payment_setting_path, class: "flex flex-col items-center py-1 #{current_page?(edit_admin_payment_setting_path) ? 'text-amber-400 font-bold' : 'text-slate-400'}" do %>
+        <span class="text-lg">⚙️</span>
+        <span class="text-[10px] mt-0.5">Ajustes</span>
+      <% end %>
+
+      <%= link_to root_path, class: "flex flex-col items-center py-1 text-slate-400" do %>
+        <span class="text-lg">🍲</span>
+        <span class="text-[10px] mt-0.5">App</span>
+      <% end %>
+    </nav>
+  </body>
+</html>

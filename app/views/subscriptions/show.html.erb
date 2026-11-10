@@ -1,0 +1,80 @@
+<%= turbo_stream_from "user_#{current_user.id}_subscription" %>
+
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white text-xl shadow-md shadow-emerald-500/20">
+        ⭐
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold text-slate-900 leading-tight">Mi Suscripción</h1>
+        <p class="text-xs text-slate-500">Plan Premium MealTracker por solo $2.00 mensuales.</p>
+      </div>
+    </div>
+
+    <%= link_to root_path, class: "px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition" do %>
+      ← Volver al Diario
+    <% end %>
+  </div>
+
+  <!-- Tarjeta de Estado (Se actualiza automáticamente en vivo vía Turbo Streams) -->
+  <%= render "subscriptions/status_card", user: current_user, last_payment: @last_payment %>
+
+  <!-- Métodos de Pago del Administrador (Pago Móvil y Binance) -->
+  <%= render "subscriptions/payment_methods", payment_setting: @payment_setting %>
+
+  <!-- Formulario de Reporte de Pago -->
+  <%= render "subscriptions/payment_form", payment: @payment, payment_setting: @payment_setting %>
+
+  <!-- Historial de Pagos del Usuario -->
+  <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
+    <h3 class="text-sm font-extrabold text-slate-900 mb-3">Historial de Pagos Reportados</h3>
+    <% if @payment_history.any? %>
+      <div class="divide-y divide-slate-100 text-xs">
+        <% @payment_history.each do |p| %>
+          <div class="py-3 flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2.5">
+              <span class="text-lg"><%= p.method_icon %></span>
+              <div>
+                <p class="font-bold text-slate-900">
+                  <%= p.human_method %> • $<%= sprintf('%.2f', p.amount) %>
+                  <% if p.payment_method == "pago_movil" %>
+                    <span class="text-[11px] font-normal text-blue-700">(~<%= sprintf('%.2f', (p.amount * @payment_setting.usd_to_bs_rate).round(2)) %> Bs.)</span>
+                  <% end %>
+                </p>
+                <p class="text-[11px] text-slate-400 font-mono">Ref: <%= p.reference_number %> • <%= p.created_at.strftime("%d/%m/%Y %I:%M %p") %></p>
+                <% if p.receipt.attached? %>
+                  <p class="mt-0.5">
+                    <%= link_to rails_blob_path(p.receipt, disposition: "inline"), target: "_blank", data: { turbo: false }, class: "text-[11px] text-emerald-600 hover:text-emerald-700 font-bold hover:underline inline-flex items-center space-x-1" do %>
+                      <span>📎</span>
+                      <span>Ver comprobante adjunto</span>
+                    <% end %>
+                  </p>
+                <% end %>
+              </div>
+            </div>
+
+            <div>
+              <% if p.approved? %>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                  ✅ Aprobado (+30 días)
+                </span>
+              <% elsif p.pending? %>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 animate-pulse">
+                  ⏳ En Revisión
+                </span>
+              <% else %>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+                  ❌ Rechazado
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-xs text-slate-400 py-3 text-center">Aún no has reportado ningún pago.</p>
+    <% end %>
+  </div>
+</div>

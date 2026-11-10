@@ -1,0 +1,50 @@
+<%
+  turn = household.current_turn(date)
+  members = household.users
+%>
+
+<div id="cooking_turn_widget" class="bg-white rounded-3xl p-4 md:p-5 shadow-xs border border-slate-100 space-y-3">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl shadow-xs">
+        👨‍🍳
+      </div>
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Turno de Cocina de Hoy</h3>
+        <p class="text-sm font-black text-slate-900">
+          <% if turn.present? %>
+            Hoy cocina <span class="text-emerald-700 underline decoration-emerald-400 decoration-2"><%= turn.user.display_name %></span>
+          <% else %>
+            <span class="text-slate-500 font-normal">Sin chef asignado para hoy</span>
+          <% end %>
+        </p>
+      </div>
+    </div>
+
+    <% if turn.present? && turn.user_id == current_user.id %>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 animate-pulse">
+        ¡Te toca a ti!
+      </span>
+    <% end %>
+  </div>
+
+  <!-- Botones interactivos para asignar turno en 1 clic -->
+  <div class="pt-1">
+    <span class="text-[11px] font-bold text-slate-500 block mb-1.5">¿A quién le toca preparar la comida?</span>
+    <div class="flex flex-wrap gap-1.5">
+      <% members.each do |m| %>
+        <% is_assigned = turn.present? && turn.user_id == m.id %>
+        <%= button_to assign_turn_household_path(user_id: m.id, date: date),
+                      method: :post,
+                      data: { turbo: true },
+                      class: "px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer active:scale-95 #{ is_assigned ? 'bg-amber-500 text-slate-950 shadow-xs font-black' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }" do %>
+          <span><%= is_assigned ? '🍳' : '👤' %></span>
+          <span><%= m.display_name %></span>
+          <% if is_assigned %>
+            <span class="text-[10px] ml-1">✓</span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

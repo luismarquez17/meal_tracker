@@ -1,0 +1,131 @@
+<%
+  prev_day = @date - 1.day
+  next_day = @date + 1.day
+  is_today = @date == Date.current
+  fecha_formateada = spanish_full_date(@date)
+%>
+
+<div class="space-y-4">
+  <!-- Selector de Ámbito: Personal vs Familiar (si tiene Hogar) -->
+  <% if @household.present? %>
+    <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-2xl text-xs font-bold text-center">
+      <%= link_to dashboard_path(date: @date, scope: "personal"), class: "py-2 rounded-xl transition flex items-center justify-center space-x-1.5 #{ @scope == 'personal' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900' }" do %>
+        <span>👤</span>
+        <span>Mis Gastos</span>
+      <% end %>
+
+      <%= link_to dashboard_path(date: @date, scope: "family"), class: "py-2 rounded-xl transition flex items-center justify-center space-x-1.5 #{ @scope == 'family' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900' }" do %>
+        <span>👨‍👩‍👧</span>
+        <span>Hogar (<%= @household.name %>)</span>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Banner de invitación a activar Modo Hogar -->
+    <div class="bg-white rounded-3xl p-3 px-4 border border-slate-100 shadow-2xs flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-xl">🏠</span>
+        <div>
+          <h4 class="text-xs font-black text-slate-900">Modo Pareja & Familia</h4>
+          <p class="text-[11px] text-slate-500 font-medium">Lleva los gastos de la casa con tu pareja (1 plan cubre a ambos)</p>
+        </div>
+      </div>
+      <%= link_to "Activar", new_household_path, class: "px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black rounded-xl transition shrink-0" %>
+    </div>
+  <% end %>
+
+  <!-- Banner Acceso Directo al Wrapped Semanal -->
+  <div class="bg-gradient-to-r from-teal-800 via-emerald-700 to-emerald-600 rounded-3xl p-3.5 text-white shadow-md flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-xs">
+        ✨
+      </div>
+      <div>
+        <h4 class="text-xs font-black text-white">Tu Semana en Resumen (Wrapped)</h4>
+        <p class="text-[11px] text-emerald-100">Puntuación de hábito, ahorro y tarjeta para compartir</p>
+      </div>
+    </div>
+    <%= link_to weekly_summary_path(date: @date, scope: @scope), class: "px-3 py-1.5 bg-white hover:bg-slate-50 text-emerald-900 font-extrabold text-xs rounded-xl shadow-xs transition active:scale-95 shrink-0" do %>
+      Ver Tarjeta →
+    <% end %>
+  </div>
+
+  <!-- Selector de Día (Mobile-first con botones grandes de navegación) -->
+  <div class="bg-white rounded-3xl p-3.5 shadow-2xs border border-slate-100 flex items-center justify-between">
+    <%= link_to dashboard_path(date: prev_day, scope: @scope), class: "w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95 shadow-2xs", title: "Día anterior" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+
+    <div class="text-center flex-1 px-2">
+      <div class="flex items-center justify-center space-x-1.5">
+        <span class="text-sm md:text-base font-extrabold text-slate-900"><%= fecha_formateada %></span>
+        <% if is_today %>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+            Hoy
+          </span>
+        <% else %>
+          <%= link_to "Ir a Hoy", dashboard_path(date: Date.current, scope: @scope), class: "text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 underline" %>
+        <% end %>
+      </div>
+
+      <!-- Selector de fecha nativo accesible -->
+      <form action="<%= dashboard_path %>" method="get" class="inline-block mt-0.5">
+        <input type="hidden" name="scope" value="<%= @scope %>">
+        <input type="date"
+               name="date"
+               value="<%= @date %>"
+               onchange="this.form.submit()"
+               class="text-xs text-slate-600 bg-transparent border-none p-0 cursor-pointer font-medium hover:text-slate-900 focus:ring-0">
+      </form>
+    </div>
+
+    <%= link_to dashboard_path(date: next_day, scope: @scope), class: "w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95 shadow-2xs", title: "Día siguiente" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+      </svg>
+    <% end %>
+  </div>
+
+  <!-- Widgets Familiares (Bote de Ahorro y Turno de Cocina) si tiene Hogar -->
+  <% if @household.present? %>
+    <%= render "dashboard/cooking_turn_widget", household: @household, date: @date %>
+    <%= render "dashboard/household_goal_widget", household: @household, date: @date %>
+  <% end %>
+
+  <!-- Resumen del día (Gasto vs Ahorro hoy) -->
+  <%= render "dashboard/daily_kpis" %>
+
+  <!-- Comidas del Día -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between px-1">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600">
+        <%= @scope == 'family' ? "Comidas del Hogar (#{@meals.size})" : "Registro Diario (#{@meals.size}/3)" %>
+      </h2>
+      <% if @scope == 'family' %>
+        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+          Sincronizado con tu familia
+        </span>
+      <% else %>
+        <span class="text-xs font-semibold text-slate-600">
+          <%= @meals.size %>/3 registradas
+        </span>
+      <% end %>
+    </div>
+
+    <!-- 1. Desayuno -->
+    <%= render "dashboard/meal_slot", meal: @breakfast, meal_type: "breakfast", date: @date %>
+
+    <!-- 2. Almuerzo -->
+    <%= render "dashboard/meal_slot", meal: @lunch, meal_type: "lunch", date: @date %>
+
+    <!-- 3. Cena -->
+    <%= render "dashboard/meal_slot", meal: @dinner, meal_type: "dinner", date: @date %>
+  </div>
+
+  <!-- Gastos Hormiga & Extras de Hoy (Café, Pasajes, Recargas, etc.) -->
+  <%= render "dashboard/micro_expenses" %>
+
+  <!-- Balance del Mes Actual (Tarjeta destacada al pie) -->
+  <%= render "dashboard/monthly_kpis" %>
+</div>

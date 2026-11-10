@@ -1,0 +1,304 @@
+<div class="space-y-6">
+  <!-- Encabezado del Dashboard -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-black text-white tracking-tight flex items-center space-x-2">
+        <span>Panel Super Admin</span>
+        <span class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-bold">
+          En Vivo
+        </span>
+      </h1>
+      <p class="text-xs text-slate-400 mt-0.5">
+        Bienvenido Luis. Supervisa tus ingresos de $2/mes, usuarios y pagos en tiempo real.
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <%= link_to admin_payments_path, class: "px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition active:scale-95 flex items-center space-x-1.5" do %>
+        <span>⚡</span>
+        <span>Revisar Pagos</span>
+        <% if @pending_count > 0 %>
+          <span class="ml-1 px-1.5 py-0.2 bg-slate-950 text-amber-300 rounded-full text-[10px] font-bold">
+            <%= @pending_count %>
+          </span>
+        <% end %>
+      <% end %>
+
+      <%= link_to edit_admin_payment_setting_path, class: "px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition" do %>
+        ⚙️ Métodos
+      <% end %>
+    </div>
+  </div>
+
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <!-- Ingresos Totales -->
+    <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl relative overflow-hidden">
+      <div class="flex items-center justify-between">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ingresos Totales</p>
+        <span class="text-base">💰</span>
+      </div>
+      <p class="text-2xl font-black text-emerald-400 mt-2">$<%= sprintf('%.2f', @total_revenue) %> <span class="text-xs font-semibold text-slate-500">USD</span></p>
+      <p class="text-[11px] text-slate-400 mt-1">Acumulado en membresías</p>
+    </div>
+
+    <!-- Ingresos Este Mes -->
+    <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl relative overflow-hidden">
+      <div class="flex items-center justify-between">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mes Actual</p>
+        <span class="text-base">📅</span>
+      </div>
+      <p class="text-2xl font-black text-amber-400 mt-2">$<%= sprintf('%.2f', @current_month_revenue) %> <span class="text-xs font-semibold text-slate-500">USD</span></p>
+      <p class="text-[11px] text-slate-400 mt-1"><%= Time.current.strftime("%B %Y").capitalize %></p>
+    </div>
+
+    <!-- Suscriptores Activos -->
+    <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl relative overflow-hidden">
+      <div class="flex items-center justify-between">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Membresías Activas</p>
+        <span class="text-base">✨</span>
+      </div>
+      <p class="text-2xl font-black text-white mt-2"><%= @active_subscribers_count %> <span class="text-xs font-semibold text-slate-500">/ <%= @total_users_count %></span></p>
+      <p class="text-[11px] text-emerald-400 font-medium mt-1">Con acceso al día</p>
+    </div>
+
+    <!-- Pagos Pendientes -->
+    <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-3xl relative overflow-hidden <%= 'ring-1 ring-amber-500/50' if @pending_count > 0 %>">
+      <div class="flex items-center justify-between">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Por Aprobar</p>
+        <span class="text-base">⏳</span>
+      </div>
+      <p class="text-2xl font-black <%= @pending_count > 0 ? 'text-amber-400 animate-pulse' : 'text-slate-400' %> mt-2">
+        <%= @pending_count %>
+      </p>
+      <p class="text-[11px] text-slate-400 mt-1">Requieren tu aprobación</p>
+    </div>
+  </div>
+
+  <!-- Sección de Pagos Pendientes en Tiempo Real -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xs">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold">
+          ⚡
+        </div>
+        <div>
+          <h2 class="text-base font-extrabold text-white">Pagos Pendientes de Aprobación</h2>
+          <p class="text-xs text-slate-400">Aprueba con 1 clic para activar 30 días de suscripción al cliente.</p>
+        </div>
+      </div>
+
+      <%= link_to "Ver todos los pagos →", admin_payments_path, class: "text-xs font-bold text-amber-400 hover:text-amber-300 transition" %>
+    </div>
+
+    <!-- Lista en tiempo real conectada a Turbo Streams -->
+    <div id="pending_payments_list" class="space-y-3">
+      <% if @pending_payments.any? %>
+        <% @pending_payments.each do |payment| %>
+          <%= render "admin/payments/payment_row", payment: payment %>
+        <% end %>
+      <% else %>
+        <div class="py-8 text-center bg-slate-950/50 rounded-2xl border border-dashed border-slate-800">
+          <p class="text-3xl mb-1">🎉</p>
+          <p class="text-xs font-bold text-slate-300">¡Bandeja al día!</p>
+          <p class="text-[11px] text-slate-500">No hay pagos pendientes por revisar en este momento.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Gráfico de Métricas Mensuales -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xs space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <h2 class="text-base font-extrabold text-white">Métricas con los Meses</h2>
+        <p class="text-xs text-slate-400">Evolución de ingresos mensuales por suscripciones ($2 USD) y nuevos clientes.</p>
+      </div>
+
+      <div class="flex items-center space-x-3 text-xs flex-wrap gap-y-2">
+        <span class="inline-flex items-center space-x-1.5 text-amber-400 font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          <span>Ingresos ($)</span>
+        </span>
+        <span class="inline-flex items-center space-x-1.5 text-emerald-400 font-semibold">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span>Nuevos Usuarios</span>
+        </span>
+        <button type="button"
+                onclick="downloadCanvasChart('monthlyMetricsChart', 'metricas_admin_ingresos')"
+                class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center space-x-1 cursor-pointer"
+                title="Descargar este gráfico como imagen PNG">
+          <span>📸</span>
+          <span>Guardar PNG</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Canvas para Chart.js -->
+    <div class="h-64 w-full relative">
+      <canvas id="monthlyMetricsChart"></canvas>
+    </div>
+
+    <!-- Tabla Detallada de los Meses -->
+    <div class="overflow-x-auto pt-2 border-t border-slate-800">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="text-slate-400 border-b border-slate-800">
+            <th class="py-2.5 font-bold">Mes</th>
+            <th class="py-2.5 font-bold text-right">Ingresos ($)</th>
+            <th class="py-2.5 font-bold text-center">Pagos Aprobados</th>
+            <th class="py-2.5 font-bold text-right">Nuevos Registros</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 font-medium">
+          <% @monthly_metrics.reverse.each do |metric| %>
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="py-2.5 font-bold text-slate-200"><%= metric[:label] %></td>
+              <td class="py-2.5 font-mono font-bold text-emerald-400 text-right">$<%= sprintf('%.2f', metric[:revenue]) %></td>
+              <td class="py-2.5 text-center text-slate-300"><%= metric[:approved_count] %> pagos</td>
+              <td class="py-2.5 text-right text-slate-300 font-semibold">+<%= metric[:new_users] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Resumen de Métodos de Cobro Actuales -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
+          <span>📱</span>
+          <span>Tu Pago Móvil Configurado</span>
+        </h3>
+        <%= link_to "Editar", edit_admin_payment_setting_path, class: "text-xs font-bold text-amber-400 hover:underline" %>
+      </div>
+      <div class="text-xs space-y-1 text-slate-400 font-medium">
+        <p><strong class="text-slate-200">Banco:</strong> <%= @payment_setting.pago_movil_bank %></p>
+        <p><strong class="text-slate-200">Teléfono:</strong> <%= @payment_setting.pago_movil_phone %></p>
+        <p><strong class="text-slate-200">Cédula:</strong> <%= @payment_setting.pago_movil_id_number %></p>
+        <p><strong class="text-slate-200">Titular:</strong> <%= @payment_setting.pago_movil_holder_name %></p>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-bold text-slate-300 flex items-center space-x-1.5">
+          <span>🟡</span>
+          <span>Tu Binance Configurado</span>
+        </h3>
+        <%= link_to "Editar", edit_admin_payment_setting_path, class: "text-xs font-bold text-amber-400 hover:underline" %>
+      </div>
+      <div class="text-xs space-y-1 text-slate-400 font-medium">
+        <p><strong class="text-slate-200">Binance Pay ID:</strong> <%= @payment_setting.binance_pay_id %></p>
+        <p><strong class="text-slate-200">Correo:</strong> <%= @payment_setting.binance_email %></p>
+        <p><strong class="text-slate-200">Red:</strong> <%= @payment_setting.binance_network %></p>
+        <p class="truncate"><strong class="text-slate-200">USDT:</strong> <%= @payment_setting.binance_usdt_address %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    const canvas = document.getElementById('monthlyMetricsChart');
+    if (!canvas) return;
+
+    if (window._adminChartInstance) {
+      window._adminChartInstance.destroy();
+    }
+
+    const labels = <%= raw @chart_labels.to_json %>;
+    const revenueData = <%= raw @chart_revenue_data.to_json %>;
+    const usersData = <%= raw @chart_users_data.to_json %>;
+
+    const ctx = canvas.getContext('2d');
+    const barGradient = ctx.createLinearGradient(0, 0, 0, 240);
+    barGradient.addColorStop(0, 'rgba(245, 158, 11, 0.45)');
+    barGradient.addColorStop(1, 'rgba(245, 158, 11, 0.08)');
+
+    window._adminChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Ingresos ($ USD)',
+            data: revenueData,
+            backgroundColor: barGradient,
+            borderColor: '#F59E0B',
+            borderWidth: 2,
+            borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
+            borderSkipped: 'bottom',
+            maxBarThickness: 38,
+            order: 2,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Nuevos Usuarios',
+            data: usersData,
+            type: 'line',
+            borderColor: '#10B981',
+            backgroundColor: '#10B981',
+            borderWidth: 3,
+            tension: 0.35,
+            pointBackgroundColor: '#10B981',
+            pointBorderColor: '#0f172a',
+            pointBorderWidth: 2.5,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            order: 1,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleColor: '#f8fafc',
+            bodyColor: '#cbd5e1',
+            borderColor: '#334155',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 12,
+            boxPadding: 4
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            beginAtZero: true,
+            grace: '15%',
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              color: '#F59E0B',
+              callback: function(v) { return '$' + v; }
+            }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            beginAtZero: true,
+            grace: '15%',
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#10B981', stepSize: 1 }
+          }
+        }
+      }
+    });
+  });
+</script>

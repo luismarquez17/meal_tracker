@@ -1,0 +1,237 @@
+<%
+  bcv_rate = PaymentSetting.current.usd_to_bs_rate
+  total_micro_usd = @micro_expenses.sum { |m| m.amount || 0.0 }
+  total_micro_bs = (total_micro_usd * bcv_rate).round(2)
+%>
+
+<div id="micro_expenses_section" class="bg-white rounded-3xl p-4 md:p-5 shadow-xs border border-slate-100/90 space-y-3.5">
+  <!-- Encabezado de Gastos Hormiga -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-lg font-bold">
+        ⚡
+      </div>
+      <div>
+        <h3 class="text-sm font-extrabold text-slate-900 leading-tight">Gastos Hormiga & Extras</h3>
+        <p class="text-[11px] text-slate-400">Café, pasajes, chucherías y compras rápidas</p>
+      </div>
+    </div>
+
+    <% if total_micro_usd > 0 %>
+      <div class="text-right">
+        <span class="text-xs font-black text-rose-600 font-mono">$<%= sprintf('%.2f', total_micro_usd) %></span>
+        <span class="block text-[10px] text-slate-400 font-mono">≈ <%= sprintf('%.2f', total_micro_bs) %> Bs</span>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Botones de Acceso Rápido por Categoría -->
+  <div>
+    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2" id="quick-category-buttons">
+      <button type="button" onclick="selectMicroCategory('snack', '☕', 'Café / Antojo', 'Ej. Café con leche, empanada, galleta')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-amber-50 hover:border-amber-300 border border-slate-200 text-center transition active:scale-95 cursor-pointer">
+        <span class="text-xl block">☕</span>
+        <span class="text-[11px] font-bold text-slate-700 block mt-0.5">Antojo</span>
+      </button>
+
+      <button type="button" onclick="selectMicroCategory('transport', '🚗', 'Transporte / Pasaje', 'Ej. Pasaje buseta, taxi, gasolina')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 border border-slate-200 text-center transition active:scale-95 cursor-pointer">
+        <span class="text-xl block">🚗</span>
+        <span class="text-[11px] font-bold text-slate-700 block mt-0.5">Pasaje</span>
+      </button>
+
+      <button type="button" onclick="selectMicroCategory('services', '📱', 'Recarga / Saldo', 'Ej. Recarga Digitel, Movistar, SimpleTV')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-purple-50 hover:border-purple-300 border border-slate-200 text-center transition active:scale-95 cursor-pointer">
+        <span class="text-xl block">📱</span>
+        <span class="text-[11px] font-bold text-slate-700 block mt-0.5">Recarga</span>
+      </button>
+
+      <button type="button" onclick="selectMicroCategory('groceries', '🛒', 'Mercado / Víveres', 'Ej. Pan, queso, bodega, frutas')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200 text-center transition active:scale-95 cursor-pointer">
+        <span class="text-xl block">🛒</span>
+        <span class="text-[11px] font-bold text-slate-700 block mt-0.5">Mercado</span>
+      </button>
+
+      <button type="button" onclick="selectMicroCategory('other', '💡', 'Otro Gasto', 'Ej. Farmacia, papelería, propina')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 hover:border-slate-300 border border-slate-200 text-center transition active:scale-95 cursor-pointer col-span-2 sm:col-span-1">
+        <span class="text-xl block">💡</span>
+        <span class="text-[11px] font-bold text-slate-700 block mt-0.5">Otro</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Micro-formulario dinámico desplegable -->
+  <div id="micro-expense-form-drawer" class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 transition-all">
+    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+      <div class="flex items-center space-x-2">
+        <span id="micro-selected-icon" class="text-xl">☕</span>
+        <span id="micro-selected-label" class="text-xs font-black text-slate-900">Café / Antojo</span>
+      </div>
+      <button type="button" onclick="closeMicroForm()" class="text-xs text-slate-400 hover:text-slate-600 font-bold px-2 py-1 rounded-lg hover:bg-slate-200">
+        ✕ Cerrar
+      </button>
+    </div>
+
+    <%= form_with(model: MealLog.new, url: meal_logs_path, class: "space-y-3", data: { turbo: true }) do |f| %>
+      <%= f.hidden_field :date, value: @date %>
+      <%= f.hidden_field :category, id: "micro-category-field", value: "snack" %>
+      <%= f.hidden_field :meal_type, value: "snack" %>
+      <%= f.hidden_field :location, value: "street" %>
+      <%= f.hidden_field :currency, id: "micro-currency-field", value: "VES" %>
+      <%= f.hidden_field :bcv_rate, value: bcv_rate %>
+
+      <!-- Selector de Moneda Dual ($ USD / Bs.) -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Moneda de Pago</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="btn-currency-ves" onclick="setMicroCurrency('VES')" class="py-2 px-3 rounded-xl font-bold text-xs border border-blue-600 bg-blue-600 text-white transition active:scale-95 shadow-2xs">
+            🇻🇪 Bolívares (Bs.)
+          </button>
+          <button type="button" id="btn-currency-usd" onclick="setMicroCurrency('USD')" class="py-2 px-3 rounded-xl font-bold text-xs border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition active:scale-95 shadow-2xs">
+            💵 Dólares ($ USD)
+          </button>
+        </div>
+      </div>
+
+      <!-- Monto y Conversión en Vivo -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">¿Cuánto pagaste?</label>
+        <div class="relative rounded-2xl shadow-2xs" data-controller="money-mask">
+          <div id="micro-currency-symbol" class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+            Bs.
+          </div>
+          <%= f.hidden_field :original_amount,
+                             id: "micro-amount-input",
+                             oninput: "calculateMicroLiveConversion(this.value)",
+                             data: { "money-mask-target": "hidden" } %>
+          <input type="text"
+                 inputmode="numeric"
+                 autocomplete="off"
+                 id="micro-display-input"
+                 placeholder="0,00"
+                 data-money-mask-target="display"
+                 class="block w-full pl-10 pr-10 py-2.5 text-base font-black text-slate-900 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+          <button type="button"
+                  tabindex="-1"
+                  data-action="click->money-mask#clear"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-slate-500 text-xs font-bold transition cursor-pointer"
+                  title="Borrar monto">
+            ✕
+          </button>
+        </div>
+
+        <!-- Indicador de Conversión BCV en tiempo real -->
+        <p id="micro-conversion-preview" class="text-[11px] text-blue-700 font-medium mt-1">
+          Tasa oficial BCV: <strong><%= sprintf('%.2f', bcv_rate) %> Bs / USD</strong>
+        </p>
+      </div>
+
+      <!-- Nota o Detalle -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Detalle o Lugar <span class="text-slate-400 font-normal">(opcional)</span></label>
+        <%= f.text_field :note, id: "micro-note-input", placeholder: "Ej. Café con leche, empanada...", class: "block w-full px-3.5 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" %>
+      </div>
+
+      <!-- Botón Cargar -->
+      <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-[0.98] transition cursor-pointer flex items-center justify-center space-x-1.5">
+        <span>✓</span>
+        <span>Guardar Gasto Hormiga</span>
+      </button>
+    <% end %>
+  </div>
+
+  <!-- Lista de Gastos Hormiga del Día -->
+  <% if @micro_expenses.any? %>
+    <div class="space-y-2 pt-2 border-t border-slate-100">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1">Registrados Hoy</span>
+      <div class="divide-y divide-slate-100">
+        <% @micro_expenses.each do |expense| %>
+          <div id="micro_expense_<%= expense.id %>" class="py-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2.5">
+              <span class="text-xl p-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                <%= expense.category_icon %>
+              </span>
+              <div>
+                <p class="text-xs font-bold text-slate-900 leading-tight">
+                  <%= expense.human_category %>
+                  <% if expense.note.present? %>
+                    <span class="font-normal text-slate-600">• <%= expense.note %></span>
+                  <% end %>
+                </p>
+                <p class="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <%= expense.formatted_dual_amount %>
+                </p>
+              </div>
+            </div>
+
+            <%= button_to meal_log_path(expense), method: :delete, data: { turbo_confirm: "¿Deseas eliminar este gasto?" }, class: "p-1.5 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer", title: "Eliminar" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  const bcvRate = <%= bcv_rate %>;
+  let activeMicroCurrency = 'VES';
+
+  function selectMicroCategory(cat, icon, label, placeholder) {
+    document.getElementById('micro-category-field').value = cat;
+    document.getElementById('micro-selected-icon').innerText = icon;
+    document.getElementById('micro-selected-label').innerText = label;
+    const noteInput = document.getElementById('micro-note-input');
+    if (noteInput) noteInput.placeholder = placeholder;
+
+    const drawer = document.getElementById('micro-expense-form-drawer');
+    drawer.classList.remove('hidden');
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    setTimeout(() => {
+      document.getElementById('micro-display-input')?.focus();
+    }, 100);
+  }
+
+  function closeMicroForm() {
+    document.getElementById('micro-expense-form-drawer').classList.add('hidden');
+  }
+
+  function setMicroCurrency(curr) {
+    activeMicroCurrency = curr;
+    document.getElementById('micro-currency-field').value = curr;
+    const btnVes = document.getElementById('btn-currency-ves');
+    const btnUsd = document.getElementById('btn-currency-usd');
+    const symbol = document.getElementById('micro-currency-symbol');
+
+    if (curr === 'VES') {
+      btnVes.className = "py-2 px-3 rounded-xl font-bold text-xs border border-blue-600 bg-blue-600 text-white transition active:scale-95 shadow-2xs";
+      btnUsd.className = "py-2 px-3 rounded-xl font-bold text-xs border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition active:scale-95 shadow-2xs";
+      symbol.innerText = "Bs.";
+    } else {
+      btnUsd.className = "py-2 px-3 rounded-xl font-bold text-xs border border-emerald-600 bg-emerald-600 text-white transition active:scale-95 shadow-2xs";
+      btnVes.className = "py-2 px-3 rounded-xl font-bold text-xs border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition active:scale-95 shadow-2xs";
+      symbol.innerText = "$";
+    }
+
+    const currentVal = document.getElementById('micro-amount-input').value;
+    calculateMicroLiveConversion(currentVal);
+  }
+
+  function calculateMicroLiveConversion(val) {
+    const num = parseFloat(val) || 0;
+    const preview = document.getElementById('micro-conversion-preview');
+    if (!preview) return;
+
+    if (num <= 0) {
+      preview.innerHTML = `Tasa oficial BCV: <strong>${bcvRate.toFixed(2)} Bs / USD</strong>`;
+      return;
+    }
+
+    if (activeMicroCurrency === 'VES') {
+      const usdEquiv = (num / bcvRate).toFixed(2);
+      preview.innerHTML = `≈ <strong class="text-emerald-700">$${usdEquiv} USD</strong> (calculado a tasa BCV: ${bcvRate.toFixed(2)} Bs/$)`;
+    } else {
+      const bsEquiv = (num * bcvRate).toFixed(2);
+      preview.innerHTML = `≈ <strong class="text-blue-800">${bsEquiv} Bs.</strong> (calculado a tasa BCV: ${bcvRate.toFixed(2)} Bs/$)`;
+    }
+  }
+</script>

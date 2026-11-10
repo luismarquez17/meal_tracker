@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "meal_slot_#{@meal_log.meal_type}", partial: "dashboard/meal_slot", locals: { meal: @meal_log, meal_type: @meal_log.meal_type, date: @meal_log.date } %>
+<%= turbo_stream.replace "daily_kpis", partial: "dashboard/daily_kpis" %>
+<%= turbo_stream.replace "monthly_kpis", partial: "dashboard/monthly_kpis" %>
