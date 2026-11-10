@@ -27,7 +27,7 @@ class PwaAndExportTest < ActionDispatch::IntegrationTest
     # Service Worker
     get "/service-worker.js"
     assert_response :success
-    assert_includes response.body, "meal-tracker-v1"
+    assert_match(/meal-tracker-v\d+/, response.body)
 
     # Iconos PNG y SVG
     get "/icon-192.png"

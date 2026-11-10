@@ -1,11 +1,12 @@
 // Service Worker para MealTracker PWA
-const CACHE_NAME = 'meal-tracker-v1';
+const CACHE_NAME = 'meal-tracker-v2';
 const CORE_ASSETS = [
   '/',
   '/manifest.json',
   '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
+  '/apple-touch-icon.png',
   '/chart.umd.min.js'
 ];
 
