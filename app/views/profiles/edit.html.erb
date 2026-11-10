@@ -1,0 +1,46 @@
+<div class="max-w-md mx-auto space-y-5 animate-fade-in">
+  <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+    <div class="flex items-center space-x-3 mb-2">
+      <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg font-bold">
+        ✏️
+      </div>
+      <div>
+        <h2 class="text-base font-black text-slate-900">Editar Perfil</h2>
+        <p class="text-xs text-slate-500 font-medium">Actualiza tu nombre y foto de perfil</p>
+      </div>
+    </div>
+
+    <%= form_with model: @user, url: profile_path, method: :patch, local: true, class: "space-y-4 text-xs" do |f| %>
+      <% if @user.errors.any? %>
+        <div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl">
+          <ul class="list-disc pl-4 space-y-1">
+            <% @user.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="space-y-1">
+        <%= f.label :name, "Nombre Completo", class: "block font-bold text-slate-700" %>
+        <%= f.text_field :name, class: "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" %>
+      </div>
+
+      <div class="space-y-1">
+        <%= f.label :email, "Correo Electrónico", class: "block font-bold text-slate-700" %>
+        <%= f.email_field :email, class: "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" %>
+      </div>
+
+      <div class="space-y-1">
+        <%= f.label :avatar_url, "URL de Foto / Avatar", class: "block font-bold text-slate-700" %>
+        <%= f.url_field :avatar_url, placeholder: "https://ejemplo.com/mifoto.jpg", class: "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" %>
+        <p class="text-[10px] text-slate-400">Puedes pegar el enlace directo a tu foto de perfil o imagen.</p>
+      </div>
+
+      <div class="pt-2 flex gap-2">
+        <%= f.submit "Guardar Cambios", class: "flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer" %>
+        <%= link_to "Cancelar", profile_path, class: "py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95" %>
+      </div>
+    <% end %>
+  </div>
+</div>

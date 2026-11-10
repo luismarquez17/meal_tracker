@@ -24,56 +24,97 @@
     </div>
   </div>
 
-  <!-- Sección de Suscripción y Métodos de Pago ($2/mes) -->
-  <div class="bg-gradient-to-br from-white to-emerald-50/50 rounded-3xl p-5 border border-emerald-100 shadow-2xs">
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center space-x-2.5">
-        <span class="text-2xl">⭐</span>
-        <div>
-          <h3 class="text-sm font-extrabold text-slate-900">Membresía & Suscripción</h3>
-          <p class="text-xs text-slate-500">Plan $2.00 USD / mes (30 días de acceso).</p>
-        </div>
-      </div>
-
-      <% if current_user.admin? %>
-        <span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-800">
-          Super Admin
-        </span>
-      <% elsif current_user.active_subscription? %>
-        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-          <%= current_user.days_left_in_subscription %> días restantes
-        </span>
-      <% else %>
-        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
-          Vencida
-        </span>
-      <% end %>
-    </div>
-
-    <p class="text-xs text-slate-600 mb-4 leading-relaxed">
-      Consulta los datos de <strong>Pago Móvil</strong> y <strong>Binance</strong> del administrador para enviar tu pago mensual o verificar el estado de tu cuenta.
-    </p>
-
-    <%= link_to subscription_path, class: "w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-[0.98] transition flex items-center justify-center space-x-2 cursor-pointer" do %>
-      <span>💳</span>
-      <span>Ver Métodos de Pago y Suscripción ($2/mes)</span>
-      <span>→</span>
-    <% end %>
-  </div>
-
-  <!-- Si es admin, enlace directo al panel -->
+  <!-- Sección de Membresía y Suscripción (Diferente para Super Admin vs Cliente) -->
   <% if current_user.admin? %>
-    <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl p-5 border border-amber-200 shadow-2xs">
-      <div class="flex items-center justify-between">
+    <!-- Tarjeta Exclusiva de Propietario / Super Admin -->
+    <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/70 rounded-3xl p-5 md:p-6 border border-amber-500/40 shadow-xl text-white space-y-4">
+      <div class="flex items-start justify-between flex-wrap gap-2">
         <div class="flex items-center space-x-3">
-          <span class="text-2xl">👑</span>
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-2xl shadow-md shadow-amber-500/10">
+            👑
+          </div>
           <div>
-            <h3 class="text-sm font-black text-amber-950">Acceso al Panel Super Admin</h3>
-            <p class="text-xs text-amber-800">Métricas mensuales, usuarios y aprobación de pagos en 1 clic.</p>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-sm md:text-base font-black text-white">Membresía Super Admin</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 shadow-xs">
+                Vitalicia
+              </span>
+            </div>
+            <p class="text-xs text-amber-200/90 font-medium mt-0.5">Acceso Ilimitado Total • Exento de Cobros</p>
           </div>
         </div>
-        <%= link_to "Ir al Panel →", admin_dashboard_path, class: "px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs transition" %>
+
+        <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          ✓ Activa de por vida
+        </span>
       </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Como <strong>Propietario y Creador</strong>, tu cuenta nunca vence ni requiere pagos. Tú eres quien recibe las suscripciones de <strong>$2.00 USD/mes</strong> que pagan los usuarios.
+      </p>
+
+      <!-- Accesos Rápidos de Gestión para el Admin -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        <%= link_to admin_dashboard_path, class: "p-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center justify-between shadow-md shadow-amber-500/20" do %>
+          <div class="flex items-center space-x-2">
+            <span class="text-base">👑</span>
+            <span>Panel de Control Admin</span>
+          </div>
+          <% if Payment.pending.any? %>
+            <span class="px-2 py-0.5 bg-slate-950 text-amber-300 rounded-full text-[10px] font-bold animate-pulse">
+              <%= Payment.pending.count %> pend.
+            </span>
+          <% else %>
+            <span>→</span>
+          <% end %>
+        <% end %>
+
+        <%= link_to edit_admin_payment_setting_path, class: "p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center justify-between border border-white/15" do %>
+          <div class="flex items-center space-x-2">
+            <span class="text-base">🏦</span>
+            <span>Mis Datos de Cobro (Pago Móvil / Binance)</span>
+          </div>
+          <span>⚙️</span>
+        <% end %>
+      </div>
+
+      <div class="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+        <span>¿Quieres ver cómo ven los clientes la pantalla de pago?</span>
+        <%= link_to "Vista previa de clientes →", subscription_path, class: "text-amber-400 font-bold hover:underline" %>
+      </div>
+    </div>
+  <% else %>
+    <!-- Tarjeta Estándar para Clientes -->
+    <div class="bg-gradient-to-br from-white to-emerald-50/50 rounded-3xl p-5 border border-emerald-100 shadow-2xs">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-2xl">⭐</span>
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Membresía & Suscripción</h3>
+            <p class="text-xs text-slate-500">Plan $2.00 USD / mes (30 días de acceso).</p>
+          </div>
+        </div>
+
+        <% if current_user.active_subscription? %>
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            <%= current_user.days_left_in_subscription %> días restantes
+          </span>
+        <% else %>
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+            Vencida
+          </span>
+        <% end %>
+      </div>
+
+      <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+        Consulta los datos de <strong>Pago Móvil</strong> y <strong>Binance</strong> del administrador para enviar tu pago mensual o verificar el estado de tu cuenta.
+      </p>
+
+      <%= link_to subscription_path, class: "w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-[0.98] transition flex items-center justify-center space-x-2 cursor-pointer" do %>
+        <span>💳</span>
+        <span>Ver Métodos de Pago y Suscripción ($2/mes)</span>
+        <span>→</span>
+      <% end %>
     </div>
   <% end %>
 

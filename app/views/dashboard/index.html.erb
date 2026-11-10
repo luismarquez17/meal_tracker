@@ -6,6 +6,27 @@
 %>
 
 <div class="space-y-4">
+  <!-- Indicador de cuenta activa -->
+  <div class="bg-white rounded-3xl p-3 px-4 border border-slate-100 shadow-2xs flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <%= link_to profile_path do %>
+        <%= image_tag(current_user.avatar_url.presence || '/default_avatar.svg', class: "w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shadow-xs") %>
+      <% end %>
+      <div>
+        <div class="flex items-center space-x-1.5">
+          <span class="text-xs font-black text-slate-900"><%= current_user.name.presence || "Usuario" %></span>
+          <% if current_user.admin? %>
+            <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded-full text-[10px] font-black">Admin</span>
+          <% end %>
+        </div>
+        <p class="text-[11px] text-slate-500 font-medium truncate max-w-[200px] sm:max-w-xs"><%= current_user.email %></p>
+      </div>
+    </div>
+    <%= link_to profile_path, class: "px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition shrink-0 border border-slate-200" do %>
+      Mi Perfil →
+    <% end %>
+  </div>
+
   <!-- Selector de Ámbito: Personal vs Familiar (si tiene Hogar) -->
   <% if @household.present? %>
     <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-2xl text-xs font-bold text-center">

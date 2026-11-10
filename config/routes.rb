@@ -46,6 +46,11 @@ Rails.application.routes.draw do
     post :create_payment
   end
 
+  # Perfil de Usuario
+  resource :profile, only: %i[show edit update] do
+    get :change_password
+    patch :update_password
+  end
   # Área Super Admin (Solo luismarquezocando2006@gmail.com)
   namespace :admin do
     root to: "dashboard#index", as: :dashboard

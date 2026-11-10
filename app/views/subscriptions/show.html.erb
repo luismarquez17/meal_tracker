@@ -18,14 +18,30 @@
     <% end %>
   </div>
 
+  <!-- Si es admin, mostrar banner de vista previa de administrador -->
+  <% if current_user.admin? %>
+    <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-xl">👑</span>
+        <div>
+          <strong class="block">Vista Previa de Administrador</strong>
+          <span class="text-slate-600">Así es exactamente como tus clientes ven tus datos de Pago Móvil y Binance para pagarte.</span>
+        </div>
+      </div>
+      <%= link_to "Modificar mis Datos de Cobro →", edit_admin_payment_setting_path, class: "px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs shadow-xs transition shrink-0 text-center" %>
+    </div>
+  <% end %>
+
   <!-- Tarjeta de Estado (Se actualiza automáticamente en vivo vía Turbo Streams) -->
   <%= render "subscriptions/status_card", user: current_user, last_payment: @last_payment %>
 
   <!-- Métodos de Pago del Administrador (Pago Móvil y Binance) -->
   <%= render "subscriptions/payment_methods", payment_setting: @payment_setting %>
 
-  <!-- Formulario de Reporte de Pago -->
-  <%= render "subscriptions/payment_form", payment: @payment, payment_setting: @payment_setting %>
+  <!-- Formulario de Reporte de Pago (Solo para clientes regulares) -->
+  <% unless current_user.admin? %>
+    <%= render "subscriptions/payment_form", payment: @payment, payment_setting: @payment_setting %>
+  <% end %>
 
   <!-- Historial de Pagos del Usuario -->
   <div class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
