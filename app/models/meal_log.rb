@@ -121,7 +121,7 @@ class MealLog < ApplicationRecord
     if currency == "VES"
       "#{sprintf('%.2f', original_amount)} Bs. ($#{sprintf('%.2f', amount)} USD)"
     else
-      "$#{sprintf('%.2f', amount)} USD (~#{sprintf('%.2f', amount_in_bs)} Bs.)"
+      "$#{sprintf('%.2f', amount)} USD (#{sprintf('%.2f', amount_in_bs)} Bs.)"
     end
   end
 

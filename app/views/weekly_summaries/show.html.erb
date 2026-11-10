@@ -110,7 +110,7 @@
         <div class="flex items-baseline space-x-1">
           <span class="text-2xl font-black text-amber-200">$<%= sprintf('%.2f', @saved) %></span>
         </div>
-        <p class="text-[10px] text-white/75 truncate font-medium">~<%= sprintf('%.2f', @saved_bs) %> Bs. al BCV</p>
+        <p class="text-[10px] text-white/75 truncate font-medium"><%= sprintf('%.2f', @saved_bs) %> Bs. al BCV</p>
       </div>
 
       <!-- 3. Gasto en la Calle -->
@@ -119,7 +119,7 @@
         <div class="flex items-baseline space-x-1">
           <span class="text-xl font-black text-rose-200">$<%= sprintf('%.2f', @street_spent) %></span>
         </div>
-        <p class="text-[10px] text-white/75 truncate font-medium">~<%= sprintf('%.2f', @street_spent_bs) %> Bs.</p>
+        <p class="text-[10px] text-white/75 truncate font-medium"><%= sprintf('%.2f', @street_spent_bs) %> Bs.</p>
       </div>
 
       <!-- 4. Mayor Tentación -->
@@ -194,7 +194,7 @@
                 "🏆 Rango: #{@badge_info[:title]} (#{@habit_score}/10)\n" \
                 "🏠 Comidas en casa: #{@home_meals}\n" \
                 "🍔 Comidas en la calle: #{@street_meals}\n" \
-                "💰 Ahorro estimado: $#{sprintf('%.2f', @saved)} USD (~#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
+                "💰 Ahorro estimado: $#{sprintf('%.2f', @saved)} USD (#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
                 "💸 Gasto en calle: $#{sprintf('%.2f', @street_spent)} USD\n\n" \
                 "¡Controlando mis comidas y ahorrando con MealTracker!"
       wa_url = "https://wa.me/?text=#{CGI.escape(wa_text)}"
