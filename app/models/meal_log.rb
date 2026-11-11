@@ -52,6 +52,7 @@ class MealLog < ApplicationRecord
   validates :location, inclusion: { in: LOCATIONS }
   validates :category, inclusion: { in: CATEGORIES }
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validate :micro_expense_amount_positive, if: :micro_expense?
 
   before_validation :normalize_category_and_location
   before_validation :normalize_currency_and_amount
@@ -177,5 +178,11 @@ class MealLog < ApplicationRecord
   def sanitize_strings
     self.place_name = place_name.to_s.force_encoding("UTF-8").encode("UTF-8", invalid: :replace, undef: :replace) if place_name.present?
     self.note = note.to_s.force_encoding("UTF-8").encode("UTF-8", invalid: :replace, undef: :replace) if note.present?
+  end
+
+  def micro_expense_amount_positive
+    return if amount.to_f > 0 || original_amount.to_f > 0
+
+    errors.add(:base, "El monto del gasto debe ser mayor a 0")
   end
 end

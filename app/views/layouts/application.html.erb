@@ -152,27 +152,29 @@
     <% end %>
 
     <!-- Flash Messages -->
-    <% if notice.present? %>
-      <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
-        <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs animate-fade-in">
-          <div class="flex items-center space-x-2">
-            <span>✨</span>
-            <span><%= notice %></span>
+    <div id="flash_messages">
+      <% if notice.present? %>
+        <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
+          <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs animate-fade-in">
+            <div class="flex items-center space-x-2">
+              <span>✨</span>
+              <span><%= notice %></span>
+            </div>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
 
-    <% if alert.present? %>
-      <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
-        <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
-          <div class="flex items-center space-x-2">
-            <span>⚠️</span>
-            <span><%= alert %></span>
+      <% if alert.present? %>
+        <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
+          <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
+            <div class="flex items-center space-x-2">
+              <span>⚠️</span>
+              <span><%= alert %></span>
+            </div>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
 
     <!-- Main Content Container -->
     <main class="w-full max-w-md md:max-w-2xl lg:max-w-3xl mx-auto px-4 py-4 flex-1 pb-20 md:pb-6">

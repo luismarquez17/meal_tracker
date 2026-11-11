@@ -64,4 +64,74 @@ class DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, %(turbo-stream action="replace" target="meal_slot_breakfast")
   end
+
+  test "should create and count micro expense via turbo_stream" do
+    PaymentSetting.current.update!(usd_to_bs_rate: 500.0)
+
+    assert_difference("MealLog.count", 1) do
+      post meal_logs_url,
+           params: {
+             meal_log: {
+               date: Date.current,
+               category: "snack",
+               meal_type: "snack",
+               location: "street",
+               currency: "VES",
+               original_amount: "1000.00",
+               bcv_rate: "500.00",
+               note: "Café con leche"
+             }
+           },
+           as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_includes response.body, %(turbo-stream action="replace" target="micro_expenses_section")
+    assert_includes response.body, %(turbo-stream action="replace" target="daily_kpis")
+    assert_includes response.body, %(turbo-stream action="replace" target="monthly_kpis")
+    assert_includes response.body, "+Hormiga"
+    assert_includes response.body, "$2.00"
+    assert_includes response.body, "Café con leche"
+  end
+
+  test "should render form_error turbo_stream when micro expense amount is zero" do
+    assert_no_difference("MealLog.count") do
+      post meal_logs_url,
+           params: {
+             meal_log: {
+               date: Date.current,
+               category: "snack",
+               meal_type: "snack",
+               location: "street",
+               currency: "VES",
+               original_amount: "0.00",
+               bcv_rate: "500.00"
+             }
+           },
+           as: :turbo_stream
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, %(turbo-stream action="replace" target="flash_messages")
+    assert_includes response.body, "El monto del gasto debe ser mayor a 0"
+  end
+
+  test "should delete micro expense via turbo_stream and update section" do
+    log = @user.meal_logs.create!(
+      date: Date.current,
+      category: "transport",
+      location: "street",
+      currency: "USD",
+      original_amount: 3.50
+    )
+
+    assert_difference("MealLog.count", -1) do
+      delete meal_log_url(log), as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_includes response.body, %(turbo-stream action="replace" target="micro_expenses_section")
+    assert_includes response.body, %(turbo-stream action="replace" target="daily_kpis")
+    assert_includes response.body, %(turbo-stream action="replace" target="monthly_kpis")
+  end
 end

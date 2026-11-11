@@ -1,3 +1,10 @@
-<%= turbo_stream.replace "meal_slot_#{@meal_log.meal_type}", partial: "dashboard/meal_slot", locals: { meal: @meal_log, meal_type: @meal_log.meal_type, date: @meal_log.date } %>
+<% if @meal_log.micro_expense? %>
+  <%= turbo_stream.replace "micro_expenses_section", partial: "dashboard/micro_expenses" %>
+<% else %>
+  <%= turbo_stream.replace "meal_slot_#{@meal_log.meal_type}", partial: "dashboard/meal_slot", locals: { meal: @meal_log, meal_type: @meal_log.meal_type, date: @meal_log.date } %>
+<% end %>
 <%= turbo_stream.replace "daily_kpis", partial: "dashboard/daily_kpis" %>
 <%= turbo_stream.replace "monthly_kpis", partial: "dashboard/monthly_kpis" %>
+<%= turbo_stream.replace "flash_messages" do %>
+  <div id="flash_messages"></div>
+<% end %>

@@ -141,7 +141,7 @@ class MealLogsController < ApplicationController
       format.turbo_stream do
         if was_micro
           render turbo_stream: [
-            turbo_stream.remove("micro_expense_#{@meal_log.id}"),
+            turbo_stream.replace("micro_expenses_section", partial: "dashboard/micro_expenses"),
             turbo_stream.replace("daily_kpis", partial: "dashboard/daily_kpis"),
             turbo_stream.replace("monthly_kpis", partial: "dashboard/monthly_kpis")
           ]
@@ -166,16 +166,31 @@ class MealLogsController < ApplicationController
 
   def prepare_aggregates(date)
     @date = date
+    household = current_user.household
 
-    base_logs = current_user.household.present? ? current_user.household.meal_logs : current_user.meal_logs
-    @meals = base_logs.for_date(@date)
-    @day_street_spent = @meals.select(&:street?).sum { |m| m.amount || 0.0 }
+    @meals = if household.present?
+               household.meal_logs.meals_only.for_date(@date)
+             else
+               current_user.meal_logs.meals_only.for_date(@date)
+             end
 
-    @month_meals        = base_logs.for_month(@date)
-    @month_street_spent = @month_meals.select(&:street?).sum { |m| m.amount || 0.0 }
-    @month_street_count = @month_meals.count(&:street?)
-    @month_home_count   = @month_meals.count(&:home?)
-    @month_total_count  = @month_meals.size
+    @micro_expenses = current_user.meal_logs.micro_expenses.for_date(@date).recent_first
+
+    @day_meals_spent  = @meals.select(&:street?).sum { |m| m.amount || 0.0 }
+    @day_micro_spent  = @micro_expenses.sum { |m| m.amount || 0.0 }
+    @day_street_spent = @day_meals_spent + @day_micro_spent
+
+    month_meals = if household.present?
+                    household.meal_logs.meals_only.for_month(@date)
+                  else
+                    current_user.meal_logs.meals_only.for_month(@date)
+                  end
+    month_micro = current_user.meal_logs.micro_expenses.for_month(@date)
+
+    @month_street_spent = month_meals.select(&:street?).sum { |m| m.amount || 0.0 } + month_micro.sum { |m| m.amount || 0.0 }
+    @month_street_count = month_meals.count(&:street?) + month_micro.count
+    @month_home_count   = month_meals.count(&:home?)
+    @month_total_count  = @month_home_count + @month_street_count
     @home_ratio         = @month_total_count.positive? ? ((@month_home_count.to_f / @month_total_count) * 100).round : 0
     @avg_street_cost    = @month_street_count.positive? ? (@month_street_spent / @month_street_count).round(2) : 0.0
   end

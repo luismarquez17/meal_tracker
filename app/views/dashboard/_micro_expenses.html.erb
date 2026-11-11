@@ -172,10 +172,10 @@
 </div>
 
 <script>
-  const bcvRate = <%= bcv_rate %>;
-  let activeMicroCurrency = 'VES';
+  window.microBcvRate = <%= bcv_rate %>;
+  window.activeMicroCurrency = 'VES';
 
-  function selectMicroCategory(cat, icon, label, placeholder) {
+  window.selectMicroCategory = function(cat, icon, label, placeholder) {
     document.getElementById('micro-category-field').value = cat;
     document.getElementById('micro-selected-icon').innerText = icon;
     document.getElementById('micro-selected-label').innerText = label;
@@ -189,14 +189,14 @@
     setTimeout(() => {
       document.getElementById('micro-display-input')?.focus();
     }, 100);
-  }
+  };
 
-  function closeMicroForm() {
+  window.closeMicroForm = function() {
     document.getElementById('micro-expense-form-drawer').classList.add('hidden');
-  }
+  };
 
-  function setMicroCurrency(curr) {
-    activeMicroCurrency = curr;
+  window.setMicroCurrency = function(curr) {
+    window.activeMicroCurrency = curr;
     document.getElementById('micro-currency-field').value = curr;
     const btnVes = document.getElementById('btn-currency-ves');
     const btnUsd = document.getElementById('btn-currency-usd');
@@ -212,26 +212,28 @@
       symbol.innerText = "$";
     }
 
-    const currentVal = document.getElementById('micro-amount-input').value;
-    calculateMicroLiveConversion(currentVal);
-  }
+    const currentVal = document.getElementById('micro-amount-input')?.value;
+    window.calculateMicroLiveConversion(currentVal);
+  };
 
-  function calculateMicroLiveConversion(val) {
+  window.calculateMicroLiveConversion = function(val) {
     const num = parseFloat(val) || 0;
     const preview = document.getElementById('micro-conversion-preview');
     if (!preview) return;
 
+    const rate = window.microBcvRate || 1;
+
     if (num <= 0) {
-      preview.innerHTML = `Tasa oficial BCV: <strong>${bcvRate.toFixed(2)} Bs / USD</strong>`;
+      preview.innerHTML = `Tasa oficial BCV: <strong>${rate.toFixed(2)} Bs / USD</strong>`;
       return;
     }
 
-    if (activeMicroCurrency === 'VES') {
-      const usdEquiv = (num / bcvRate).toFixed(2);
-      preview.innerHTML = `≈ <strong class="text-emerald-700">$${usdEquiv} USD</strong> (calculado a tasa BCV: ${bcvRate.toFixed(2)} Bs/$)`;
+    if (window.activeMicroCurrency === 'VES') {
+      const usdEquiv = (num / rate).toFixed(2);
+      preview.innerHTML = `≈ <strong class="text-emerald-700">$${usdEquiv} USD</strong> (calculado a tasa BCV: ${rate.toFixed(2)} Bs/$)`;
     } else {
-      const bsEquiv = (num * bcvRate).toFixed(2);
-      preview.innerHTML = `≈ <strong class="text-blue-800">${bsEquiv} Bs.</strong> (calculado a tasa BCV: ${bcvRate.toFixed(2)} Bs/$)`;
+      const bsEquiv = (num * rate).toFixed(2);
+      preview.innerHTML = `≈ <strong class="text-blue-800">${bsEquiv} Bs.</strong> (calculado a tasa BCV: ${rate.toFixed(2)} Bs/$)`;
     }
-  }
+  };
 </script>

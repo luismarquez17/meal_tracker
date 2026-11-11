@@ -1,0 +1,12 @@
+<%= turbo_stream.replace "flash_messages" do %>
+  <div id="flash_messages">
+    <div class="max-w-md md:max-w-2xl mx-auto px-4 mt-3 w-full">
+      <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold rounded-2xl flex items-center justify-between shadow-xs">
+        <div class="flex items-center space-x-2">
+          <span>⚠️</span>
+          <span><%= @meal_log.errors.full_messages.to_sentence.presence || "No se pudo guardar el registro. Verifica los datos." %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
