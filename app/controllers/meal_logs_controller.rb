@@ -16,7 +16,7 @@ class MealLogsController < ApplicationController
     @filter_type = params[:meal_type].presence
     @filter_period = params[:period].presence || "month"
 
-    logs = current_user.meal_logs
+    logs = current_user.household.present? ? current_user.household.meal_logs : current_user.meal_logs
 
     logs = case @filter_period
            when "month"
@@ -167,10 +167,11 @@ class MealLogsController < ApplicationController
   def prepare_aggregates(date)
     @date = date
 
-    @meals = current_user.meal_logs.for_date(@date)
+    base_logs = current_user.household.present? ? current_user.household.meal_logs : current_user.meal_logs
+    @meals = base_logs.for_date(@date)
     @day_street_spent = @meals.select(&:street?).sum { |m| m.amount || 0.0 }
 
-    @month_meals        = current_user.meal_logs.for_month(@date)
+    @month_meals        = base_logs.for_month(@date)
     @month_street_spent = @month_meals.select(&:street?).sum { |m| m.amount || 0.0 }
     @month_street_count = @month_meals.count(&:street?)
     @month_home_count   = @month_meals.count(&:home?)
