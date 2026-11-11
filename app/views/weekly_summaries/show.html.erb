@@ -104,9 +104,9 @@
         <p class="text-[11px] text-white/75 font-medium">vs <%= @street_meals %> en la calle 🍔</p>
       </div>
 
-      <!-- 2. Ahorro Estimado -->
+      <!-- 2. Comidas en Casa -->
       <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
-        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Ahorro en Casa</span>
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Comidas en Casa</span>
         <div class="flex items-baseline space-x-1">
           <span class="text-2xl font-black text-amber-200">$<%= sprintf('%.2f', @saved) %></span>
         </div>
@@ -163,7 +163,7 @@
           <% @leaderboard.each_with_index do |item, idx| %>
             <div class="flex items-center justify-between text-[11px] text-white/90">
               <span class="font-medium"><%= idx + 1 %>. <%= item[:user].display_name %></span>
-              <span class="font-bold"><%= item[:home_count] %> comidas en casa ($<%= sprintf('%.2f', item[:saved]) %> ahorrados)</span>
+              <span class="font-bold"><%= item[:home_count] %> comidas en casa ($<%= sprintf('%.2f', item[:saved]) %>)</span>
             </div>
           <% end %>
         </div>
@@ -194,9 +194,9 @@
                 "🏆 Rango: #{@badge_info[:title]} (#{@habit_score}/10)\n" \
                 "🏠 Comidas en casa: #{@home_meals}\n" \
                 "🍔 Comidas en la calle: #{@street_meals}\n" \
-                "💰 Ahorro estimado: $#{sprintf('%.2f', @saved)} USD (#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
+                "💰 Cocinando en casa: $#{sprintf('%.2f', @saved)} USD (#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
                 "💸 Gasto en calle: $#{sprintf('%.2f', @street_spent)} USD\n\n" \
-                "¡Controlando mis comidas y ahorrando con MealTracker!"
+                "¡Controlando mis comidas con MealTracker!"
       wa_url = "https://wa.me/?text=#{CGI.escape(wa_text)}"
     %>
     <a href="<%= wa_url %>"
