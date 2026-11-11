@@ -104,13 +104,13 @@
         <p class="text-[11px] text-white/75 font-medium">vs <%= @street_meals %> en la calle 🍔</p>
       </div>
 
-      <!-- 2. Comidas en Casa -->
+      <!-- 2. Gastos Hormiga -->
       <div class="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-1">
-        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Comidas en Casa</span>
+        <span class="text-[10px] uppercase tracking-wider font-extrabold text-white/75">Gastos Hormiga</span>
         <div class="flex items-baseline space-x-1">
-          <span class="text-2xl font-black text-amber-200">$<%= sprintf('%.2f', @saved) %></span>
+          <span class="text-2xl font-black text-amber-200">$<%= sprintf('%.2f', @micro_spent) %></span>
         </div>
-        <p class="text-[10px] text-white/75 truncate font-medium"><%= sprintf('%.2f', @saved_bs) %> Bs. al BCV</p>
+        <p class="text-[10px] text-white/75 truncate font-medium"><%= sprintf('%.2f', @micro_spent_bs) %> Bs. · <%= @micro_count %> <%= @micro_count == 1 ? 'registro' : 'registros' %></p>
       </div>
 
       <!-- 3. Gasto en la Calle -->
@@ -163,7 +163,7 @@
           <% @leaderboard.each_with_index do |item, idx| %>
             <div class="flex items-center justify-between text-[11px] text-white/90">
               <span class="font-medium"><%= idx + 1 %>. <%= item[:user].display_name %></span>
-              <span class="font-bold"><%= item[:home_count] %> comidas en casa ($<%= sprintf('%.2f', item[:saved]) %>)</span>
+              <span class="font-bold"><%= item[:home_count] %> comidas en casa 🏠</span>
             </div>
           <% end %>
         </div>
@@ -194,8 +194,8 @@
                 "🏆 Rango: #{@badge_info[:title]} (#{@habit_score}/10)\n" \
                 "🏠 Comidas en casa: #{@home_meals}\n" \
                 "🍔 Comidas en la calle: #{@street_meals}\n" \
-                "💰 Cocinando en casa: $#{sprintf('%.2f', @saved)} USD (#{sprintf('%.2f', @saved_bs)} Bs.)\n" \
-                "💸 Gasto en calle: $#{sprintf('%.2f', @street_spent)} USD\n\n" \
+                "💸 Gasto en calle: $#{sprintf('%.2f', @street_spent)} USD (#{sprintf('%.2f', @street_spent_bs)} Bs.)\n" \
+                "☕ Gastos hormiga: $#{sprintf('%.2f', @micro_spent)} USD\n\n" \
                 "¡Controlando mis comidas con MealTracker!"
       wa_url = "https://wa.me/?text=#{CGI.escape(wa_text)}"
     %>

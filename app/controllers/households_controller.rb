@@ -13,6 +13,12 @@ class HouseholdsController < ApplicationController
     @leaderboard = @household.weekly_cook_leaderboard
     @bcv_rate = PaymentSetting.current.usd_to_bs_rate
 
+    month_meals = @household.meal_logs.meals_only.for_month(Date.current)
+    @month_home_meals = month_meals.at_home.count
+    @month_street_meals = month_meals.on_street.count
+    @month_street_spent = month_meals.on_street.sum { |m| m.amount || 0.0 }
+    @month_street_spent_bs = (@month_street_spent * @bcv_rate).round(2)
+
     # Si es líder, cargar el desglose mensual de gastos hormiga de todos los miembros
     if current_user.household_leader?
       @members_micro_expenses = @household.monthly_micro_expenses_by_member(Date.current)

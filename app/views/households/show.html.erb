@@ -1,6 +1,4 @@
 <%
-  total_saved = @household.total_saved_month
-  total_saved_bs = (total_saved * @bcv_rate).round(2)
   is_leader = current_user.household_leader?
 %>
 
@@ -64,23 +62,33 @@
     </div>
   </div>
 
-  <!-- Comidas en Casa del Hogar este Mes -->
-  <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-5 border border-emerald-200/80 shadow-2xs space-y-1.5">
-    <div class="flex items-center space-x-2.5">
-      <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl shadow-xs">
-        💰
-      </div>
-      <div>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-800">Comidas en Casa este Mes</h2>
-        <div class="flex items-baseline space-x-2">
-          <span class="text-2xl font-black text-emerald-950">$<%= sprintf('%.2f', total_saved) %> USD</span>
-          <span class="text-xs font-bold text-emerald-700">(~<%= sprintf('%.2f', total_saved_bs) %> Bs.)</span>
+  <!-- Resumen de Comidas del Hogar este Mes -->
+  <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-5 border border-emerald-200/80 shadow-2xs space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl shadow-xs">
+          🍲
+        </div>
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-800">Comidas del Hogar este Mes</h2>
+          <p class="text-[11px] text-emerald-700 font-medium">Registro real entre todos los miembros</p>
         </div>
       </div>
     </div>
-    <p class="text-xs text-emerald-800/80 font-medium pt-1">
-      🎉 Dinero que se quedan en el bolsillo al cocinar en casa entre todos los miembros del hogar.
-    </p>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="bg-white/80 rounded-2xl p-3 border border-emerald-100">
+        <span class="text-[11px] font-bold text-emerald-700 block">🏠 En Casa</span>
+        <span class="text-xl font-black text-emerald-950"><%= @month_home_meals %></span>
+        <span class="text-[10px] text-slate-500 block"><%= @month_home_meals == 1 ? 'comida casera' : 'comidas caseras' %></span>
+      </div>
+
+      <div class="bg-white/80 rounded-2xl p-3 border border-amber-100">
+        <span class="text-[11px] font-bold text-amber-800 block">🍔 En la Calle (<%= @month_street_meals %>)</span>
+        <span class="text-xl font-black text-rose-600">$<%= sprintf('%.2f', @month_street_spent) %></span>
+        <span class="text-[10px] text-slate-500 block font-mono"><%= sprintf('%.2f', @month_street_spent_bs) %> Bs.</span>
+      </div>
+    </div>
   </div>
 
   <!-- SECCIÓN EXCLUSIVA PARA LÍDERES: Supervisión de Gastos Hormiga Familiares -->
@@ -188,7 +196,7 @@
             <div>
               <span class="text-xs font-bold text-slate-900 block"><%= entry[:user].display_name %></span>
               <span class="text-[11px] text-slate-500">
-                Cocinó en casa por $<%= sprintf('%.2f', entry[:saved]) %>
+                <%= entry[:user].role_badge_emoji %> <%= entry[:user].role_label %>
               </span>
             </div>
           </div>

@@ -32,8 +32,8 @@ class WeeklySummariesController < ApplicationController
     @bcv_rate      = PaymentSetting.current.usd_to_bs_rate
     @street_spent_bs = (@street_spent * @bcv_rate).round(2)
 
-    @saved         = @week_logs.at_home.sum { |m| m.savings }
-    @saved_bs      = (@saved * @bcv_rate).round(2)
+    @micro_spent    = @week_logs.micro_expenses.sum { |m| m.amount || 0.0 }
+    @micro_spent_bs = (@micro_spent * @bcv_rate).round(2)
 
     total_meals = @home_meals + @street_meals
     @habit_score = if total_meals.positive?
@@ -78,7 +78,7 @@ class WeeklySummariesController < ApplicationController
       }
     elsif score >= 7.5
       {
-        title: "Guardián del Ahorro 🛡️",
+        title: "Guardián del Hogar 🛡️",
         description: "Gran balance. Mantuviste los gastos de la calle a raya.",
         color_class: "from-teal-500 to-cyan-600",
         badge_bg: "bg-teal-100 text-teal-800"
