@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" class="min-h-full bg-slate-100">
   <head>
-    <title>Meal Tracker - Control de Comidas y Ahorro</title>
+    <title>Meal Tracker - Control de Comidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -84,7 +84,7 @@
               🏠 Hogar
             <% end %>
             <%= link_to analytics_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(analytics_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
-              📊 Mes & Ahorro
+              📊 Estadísticas
             <% end %>
             <%= link_to meal_logs_path, class: "px-2.5 lg:px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 #{current_page?(meal_logs_path) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}" do %>
               📜 Historial
@@ -204,7 +204,7 @@
 
         <%= link_to analytics_path, class: "flex flex-col items-center py-1 group #{current_page?(analytics_path) ? 'text-emerald-600 font-bold' : 'text-slate-600'}" do %>
           <span class="text-xl">📊</span>
-          <span class="text-[10px] mt-0.5 font-medium">Ahorro</span>
+          <span class="text-[10px] mt-0.5 font-medium">Estadísticas</span>
         <% end %>
 
         <% if current_user.admin? %>
