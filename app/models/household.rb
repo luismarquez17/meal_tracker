@@ -1,5 +1,5 @@
 class Household < ApplicationRecord
-  belongs_to :creator, class_name: "User", foreign_key: :created_by_id
+  belongs_to :creator, class_name: "User", foreign_key: :created_by_id, optional: true
   has_many :users, dependent: :nullify
   has_many :cooking_turns, dependent: :destroy
 
@@ -8,8 +8,30 @@ class Household < ApplicationRecord
 
   before_validation :generate_invite_code, on: :create
 
+  def leaders
+    users.where(household_role: %w[leader creator])
+  end
+
+  def members_only
+    users.where.not(household_role: %w[leader creator])
+  end
+
   def meal_logs
     MealLog.where(user_id: user_ids)
+  end
+
+  # Resumen de gastos hormiga por miembro para el mes (para que los líderes supervisen)
+  def monthly_micro_expenses_by_member(date = Date.current)
+    users.order(:created_at).map do |member|
+      micros = member.meal_logs.micro_expenses.for_month(date).recent_first
+      total_usd = micros.sum { |m| m.amount || 0.0 }
+      {
+        user: member,
+        micro_expenses: micros,
+        count: micros.size,
+        total_usd: total_usd
+      }
+    end
   end
 
   def current_turn(date = Date.current, meal_type = "dinner")

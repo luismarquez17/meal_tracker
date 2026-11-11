@@ -27,7 +27,8 @@ module MealTracker
     
     # Permitir visualización inline de formatos modernos de imagen en ActiveStorage
     config.active_storage.content_types_allowed_inline += %w[image/webp image/heic image/heif image/avif]
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    # Configurar zona horaria de Venezuela (UTC-4)
+    config.time_zone = "Caracas"
+    config.active_record.default_timezone = :utc
   end
 end

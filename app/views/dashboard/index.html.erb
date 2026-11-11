@@ -6,6 +6,28 @@
 %>
 
 <div class="space-y-4">
+  <!-- Indicador de Contexto Familiar & Rol -->
+  <% if current_user.household.present? %>
+    <div class="bg-white rounded-2xl px-3.5 py-2.5 shadow-2xs border border-slate-100 flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <span class="text-base"><%= current_user.role_badge_emoji %></span>
+        <div>
+          <span class="text-xs font-bold text-slate-900"><%= current_user.household.name %></span>
+          <span class="text-[11px] text-slate-500 font-medium">· Rol: <strong><%= current_user.role_label %></strong></span>
+        </div>
+      </div>
+      <% if current_user.household_member? %>
+        <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-xl">
+          Tus Gastos Hormiga abajo 👇
+        </span>
+      <% else %>
+        <span class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-xl">
+          Gestionas comidas 👑
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
   <!-- Selector de Día (Mobile-first, navegación rápida con 1 toque) -->
   <div class="bg-white rounded-3xl p-3.5 shadow-2xs border border-slate-100 flex items-center justify-between">
     <%= link_to dashboard_path(date: prev_day), class: "w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold transition active:scale-95 shadow-2xs", title: "Día anterior" do %>

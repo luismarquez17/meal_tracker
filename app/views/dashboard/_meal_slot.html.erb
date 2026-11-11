@@ -58,7 +58,7 @@
 
       <!-- Acciones de edición y borrado -->
       <div class="flex items-center space-x-1">
-        <% if meal.user_id == current_user.id || current_user.admin? %>
+        <% if meal.user_id == current_user.id || current_user.admin? || (current_user.household_leader? && current_user.household_id == meal.user&.household_id) %>
           <%= button_to meal_log_path(meal), method: :delete, data: { turbo_confirm: "¿Deseas borrar esta comida?" }, class: "p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer", title: "Eliminar" do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -71,8 +71,8 @@
     <!-- Barra interactiva de reacciones (Emojis) -->
     <%= render "dashboard/meal_reactions", meal: meal %>
 
-  <% else %>
-    <!-- Estado: No registrado (botones Calle y Casa con microformulario animado) -->
+  <% elsif current_user.can_register_meals? %>
+    <!-- Estado: No registrado (botones Calle y Casa con microformulario animado para Líderes / Individual) -->
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-xl text-slate-600">
@@ -208,6 +208,22 @@
           </button>
         </div>
       <% end %>
+    </div>
+  <% else %>
+    <!-- Vista para Miembros del Hogar: Las comidas las registran los líderes -->
+    <div class="flex items-center justify-between py-1">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-slate-100/70 flex items-center justify-center text-xl text-slate-400">
+          <%= icon %>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-700 text-base"><%= title %></h3>
+          <p class="text-xs text-slate-500 font-medium">Pendiente por registrar por los líderes 👑</p>
+        </div>
+      </div>
+      <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500">
+        Sin registrar
+      </span>
     </div>
   <% end %>
 </div>

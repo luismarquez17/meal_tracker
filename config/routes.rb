@@ -36,6 +36,9 @@ Rails.application.routes.draw do
     delete :leave
     patch :update_goal
     post :assign_turn
+    post "members/:member_id/promote", to: "households#promote_member", as: :promote_member
+    post "members/:member_id/demote", to: "households#demote_member", as: :demote_member
+    delete "members/:member_id", to: "households#remove_member", as: :remove_member
   end
 
   # Ajustes de Usuario

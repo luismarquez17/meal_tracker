@@ -39,6 +39,11 @@ class MealLogsController < ApplicationController
   end
 
   def new
+    if params[:category] != "micro_expense" && !current_user.can_register_meals?
+      redirect_to dashboard_path, alert: "Solo los líderes del hogar pueden registrar las comidas de la familia."
+      return
+    end
+
     @meal_log = current_user.meal_logs.new(
       date: params[:date] || Date.current,
       meal_type: params[:meal_type] || "lunch",
@@ -47,9 +52,24 @@ class MealLogsController < ApplicationController
   end
 
   def edit
+    if @meal_log.category == "meal" && !current_user.can_register_meals?
+      redirect_to dashboard_path, alert: "Solo los líderes del hogar pueden modificar las comidas de la familia."
+      return
+    end
   end
 
   def create
+    cat = meal_log_params[:category].presence || "meal"
+    if cat == "meal" && !current_user.can_register_meals?
+      respond_to do |format|
+        format.html { redirect_to dashboard_path, alert: "Solo los líderes del hogar pueden registrar las comidas de la familia." }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace("flash_messages", html: '<div id="flash_messages" class="p-3 bg-rose-50 text-rose-800 text-xs rounded-xl font-bold">Solo los líderes del hogar pueden registrar las comidas.</div>')
+        end
+      end
+      return
+    end
+
     if meal_log_params[:category].present? && meal_log_params[:category] != "meal"
       @meal_log = current_user.meal_logs.new(meal_log_params)
     else
@@ -76,6 +96,16 @@ class MealLogsController < ApplicationController
   end
 
   def update
+    if @meal_log.category == "meal" && !current_user.can_register_meals?
+      respond_to do |format|
+        format.html { redirect_to dashboard_path(date: @meal_log.date), alert: "Solo los líderes del hogar pueden modificar las comidas." }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace("flash_messages", html: '<div id="flash_messages" class="p-3 bg-rose-50 text-rose-800 text-xs rounded-xl font-bold">Solo los líderes del hogar pueden modificar las comidas.</div>')
+        end
+      end
+      return
+    end
+
     respond_to do |format|
       if @meal_log.update(meal_log_params)
         prepare_aggregates(@meal_log.date)
@@ -91,6 +121,16 @@ class MealLogsController < ApplicationController
   end
 
   def destroy
+    if @meal_log.category == "meal" && !current_user.can_register_meals?
+      respond_to do |format|
+        format.html { redirect_to dashboard_path(date: @meal_log.date), alert: "Solo los líderes del hogar pueden eliminar las comidas." }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace("flash_messages", html: '<div id="flash_messages" class="p-3 bg-rose-50 text-rose-800 text-xs rounded-xl font-bold">Solo los líderes del hogar pueden eliminar las comidas.</div>')
+        end
+      end
+      return
+    end
+
     date = @meal_log.date
     meal_type = @meal_log.meal_type
     was_micro = @meal_log.micro_expense?
@@ -140,7 +180,11 @@ class MealLogsController < ApplicationController
   end
 
   def set_meal_log
-    @meal_log = current_user.meal_logs.find(params[:id])
+    if current_user.household_leader?
+      @meal_log = current_user.household.meal_logs.find_by(id: params[:id]) || current_user.meal_logs.find(params[:id])
+    else
+      @meal_log = current_user.meal_logs.find(params[:id])
+    end
   end
 
   def meal_log_params

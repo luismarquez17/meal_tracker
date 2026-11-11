@@ -52,9 +52,15 @@ class User < ApplicationRecord
       return true
     end
 
-    # Beneficio Familiar: Si el creador de mi hogar tiene suscripción activa, yo también
-    if household.present? && household.created_by_id != id && household.creator.present?
-      return household.creator.active_subscription?
+    # Beneficio Familiar: Si algún miembro o líder del hogar tiene suscripción activa, cubre a toda la familia
+    if household.present?
+      if household.creator.present? && household.created_by_id != id
+        return true if household.creator.admin? || (household.creator.subscription_expires_at.present? && household.creator.subscription_expires_at > Time.current)
+      end
+
+      return household.users.where.not(id: id).any? do |u|
+        u.admin? || (u.subscription_expires_at.present? && u.subscription_expires_at > Time.current)
+      end
     end
 
     false
@@ -71,6 +77,30 @@ class User < ApplicationRecord
 
   def household_creator?
     household.present? && household.created_by_id == id
+  end
+
+  def household_leader?
+    household.present? && household_role.in?(%w[leader creator])
+  end
+
+  def household_member?
+    household.present? && !household_leader?
+  end
+
+  def can_register_meals?
+    household.blank? || household_leader?
+  end
+
+  def role_badge_emoji
+    return "👑" if household_leader?
+    return "👤" if household_member?
+    nil
+  end
+
+  def role_label
+    return "Líder" if household_leader?
+    return "Miembro" if household_member?
+    "Individual"
   end
 
   def days_left_in_subscription

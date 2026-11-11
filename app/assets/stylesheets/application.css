@@ -15,6 +15,17 @@
  */
 
 /* ==========================================================================
+   Utilidades Safe Area para PWA (iPhone Notch, Isla Dinámica y Barra de Estado)
+   ========================================================================== */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+/* ==========================================================================
    Estilos Ejecutivos de Impresión y Exportación a PDF (@media print)
    ========================================================================== */
 @media print {

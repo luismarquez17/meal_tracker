@@ -1,6 +1,7 @@
 <%
   total_saved = @household.total_saved_month
   total_saved_bs = (total_saved * @bcv_rate).round(2)
+  is_leader = current_user.household_leader?
 %>
 
 <div class="space-y-4 max-w-md md:max-w-xl mx-auto">
@@ -12,7 +13,12 @@
           🏠
         </div>
         <div>
-          <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Hogar Familiar</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Hogar Familiar</span>
+            <span class="px-2 py-0.2 rounded-full text-[10px] font-bold <%= is_leader ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-700 text-slate-300' %>">
+              <%= current_user.role_badge_emoji %> <%= current_user.role_label %>
+            </span>
+          </div>
           <h1 class="text-lg md:text-xl font-black text-white leading-tight"><%= @household.name %></h1>
         </div>
       </div>
@@ -24,7 +30,7 @@
     <!-- Caja de Invitación (Código + WhatsApp) -->
     <div class="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-2.5">
       <div class="flex items-center justify-between text-xs font-semibold text-slate-300">
-        <span>Código para invitar a tu pareja o familia:</span>
+        <span>Código para sumar a tu familia:</span>
         <span class="text-[11px] text-emerald-400 font-bold">1 suscripción cubre a todos</span>
       </div>
 
@@ -41,7 +47,7 @@
         </button>
 
         <%
-          invite_wa = "¡Hola! Únete a nuestro hogar '#{@household.name}' en MealTracker para llevar juntos los gastos de comida y mercado 🍲.\n\n" \
+          invite_wa = "¡Hola! Únete a nuestro hogar '#{@household.name}' en MealTracker para llevar juntos las comidas y gastos 🍲.\n\n" \
                       "Código de invitación: *#{@household.invite_code}*\n" \
                       "Entra aquí: #{request.base_url}/household/new"
           invite_wa_url = "https://wa.me/?text=#{CGI.escape(invite_wa)}"
@@ -76,6 +82,83 @@
       🎉 Dinero ahorrado gracias a las comidas preparadas en casa por todos los miembros del hogar.
     </p>
   </div>
+
+  <!-- SECCIÓN EXCLUSIVA PARA LÍDERES: Supervisión de Gastos Hormiga Familiares -->
+  <% if is_leader && @members_micro_expenses.present? %>
+    <%
+      total_family_micro = @members_micro_expenses.sum { |e| e[:total_usd] }
+      total_family_micro_bs = (total_family_micro * @bcv_rate).round(2)
+    %>
+    <div class="bg-white rounded-3xl p-5 shadow-xs border border-amber-200/70 space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl">
+            👑
+          </div>
+          <div>
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">Gastos Hormiga Familiares</h2>
+            <p class="text-xs text-slate-500">Supervisión de compras y extras de los miembros</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-sm font-black text-amber-900 block">$<%= sprintf('%.2f', total_family_micro) %> USD</span>
+          <span class="text-[11px] text-slate-500 font-semibold">(~<%= sprintf('%.2f', total_family_micro_bs) %> Bs.)</span>
+        </div>
+      </div>
+
+      <div class="space-y-2.5">
+        <% @members_micro_expenses.each do |entry| %>
+          <% member = entry[:user] %>
+          <% member_bs = (entry[:total_usd] * @bcv_rate).round(2) %>
+          <details class="group bg-slate-50 rounded-2xl border border-slate-100 p-3 open:bg-amber-50/40 open:border-amber-200/60 transition">
+            <summary class="flex items-center justify-between cursor-pointer list-none select-none">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-700">
+                  <%= member.display_name.first.upcase %>
+                </div>
+                <div>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="text-xs font-bold text-slate-900"><%= member.display_name %></span>
+                    <span class="text-[10px]"><%= member.role_badge_emoji %></span>
+                    <% if member.id == current_user.id %>
+                      <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1 rounded">Tú</span>
+                    <% end %>
+                  </div>
+                  <span class="text-[11px] text-slate-500"><%= entry[:count] %> <%= entry[:count] == 1 ? 'gasto registrado' : 'gastos registrados' %></span>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <div class="text-right">
+                  <span class="text-xs font-black text-slate-900 block">$<%= sprintf('%.2f', entry[:total_usd]) %></span>
+                  <span class="text-[10px] text-slate-500 font-medium">~<%= sprintf('%.2f', member_bs) %> Bs.</span>
+                </div>
+                <span class="text-slate-400 group-open:rotate-180 transition-transform text-xs">▼</span>
+              </div>
+            </summary>
+
+            <div class="mt-3 pt-3 border-t border-slate-200/70 space-y-1.5">
+              <% if entry[:micro_expenses].any? %>
+                <% entry[:micro_expenses].each do |micro| %>
+                  <div class="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-white/80 border border-slate-100">
+                    <div class="flex items-center space-x-2 truncate">
+                      <span class="text-slate-400 text-[10px]"><%= micro.date.strftime("%d/%m") %></span>
+                      <span class="font-bold text-slate-800 truncate"><%= micro.place_name.presence || micro.note.presence || "Gasto hormiga" %></span>
+                    </div>
+                    <span class="font-extrabold text-rose-600 shrink-0 ml-2">
+                      <%= micro.formatted_dual_amount %>
+                    </span>
+                  </div>
+                <% end %>
+              <% else %>
+                <p class="text-[11px] text-slate-500 italic py-1 text-center">Sin gastos hormiga registrados en este mes.</p>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 
   <!-- Widget "¿Quién cocina hoy?" -->
   <%= render "dashboard/cooking_turn_widget", household: @household, date: Date.current %>
@@ -122,54 +205,92 @@
     </div>
   </div>
 
-  <!-- Miembros del Hogar -->
+  <!-- Miembros del Hogar & Gestión de Roles -->
   <div class="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 space-y-3">
     <div class="flex items-center justify-between">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Miembros Activos</h2>
-      <span class="text-xs text-slate-500 font-medium">Sincronizados en tiempo real</span>
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Miembros del Hogar</h2>
+        <p class="text-[11px] text-slate-500">Gestión de roles y permisos familiares</p>
+      </div>
+      <% if is_leader %>
+        <span class="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">Panel de Líder</span>
+      <% end %>
     </div>
 
     <div class="divide-y divide-slate-100">
       <% @members.each do |member| %>
-        <div class="py-2.5 flex items-center justify-between">
+        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div class="flex items-center space-x-3">
-            <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-sm">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-700 text-sm">
               <%= member.display_name.first.upcase %>
             </div>
             <div>
-              <div class="flex items-center space-x-1.5">
+              <div class="flex items-center space-x-1.5 flex-wrap">
                 <span class="text-xs font-bold text-slate-900"><%= member.display_name %></span>
                 <% if member.id == current_user.id %>
                   <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-md">Tú</span>
                 <% end %>
-                <% if member.id == @household.created_by_id %>
-                  <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">Anfitrión</span>
+                <% if member.household_leader? %>
+                  <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">👑 Líder</span>
+                <% else %>
+                  <span class="px-1.5 py-0.2 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">👤 Miembro</span>
                 <% end %>
               </div>
-              <span class="text-[11px] text-slate-500"><%= member.email %></span>
+              <span class="text-[11px] text-slate-500 block"><%= member.email %></span>
             </div>
           </div>
 
-          <span class="text-xs font-semibold text-slate-600">
-            <%= member.active_subscription? ? '⭐ Plan Activo' : 'Sin plan' %>
-          </span>
+          <!-- Acciones de gestión para líderes -->
+          <div class="flex items-center space-x-1.5 self-end sm:self-center">
+            <% if is_leader && member.id != current_user.id %>
+              <% if member.household_member? %>
+                <%= button_to promote_member_household_path(member_id: member.id),
+                              method: :post,
+                              class: "px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-200/80 transition cursor-pointer",
+                              title: "Hacer Líder a este miembro" do %>
+                  👑 Hacer Líder
+                <% end %>
+              <% else %>
+                <%= button_to demote_member_household_path(member_id: member.id),
+                              method: :post,
+                              class: "px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition cursor-pointer",
+                              title: "Cambiar a rol de Miembro" do %>
+                  👤 Hacer Miembro
+                <% end %>
+              <% end %>
+
+              <%= button_to remove_member_household_path(member_id: member.id),
+                            method: :delete,
+                            data: { turbo_confirm: "¿Deseas remover a #{member.display_name} de este hogar?" },
+                            class: "px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold border border-rose-200/80 transition cursor-pointer",
+                            title: "Remover del hogar" do %>
+                ❌ Sacar
+              <% end %>
+            <% else %>
+              <span class="text-[11px] font-semibold text-slate-500">
+                <%= member.active_subscription? ? '⭐ Suscripción Activa' : 'Sin plan' %>
+              </span>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
   </div>
 
-  <!-- Ajustes del Hogar -->
+  <!-- Ajustes del Hogar (Solo para Líderes la edición del nombre) -->
   <div class="bg-white rounded-3xl p-5 shadow-xs border border-slate-100 space-y-4">
     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Ajustes del Hogar</h2>
 
-    <%= form_with(model: @household, url: update_goal_household_path, method: :patch, class: "space-y-3") do |f| %>
-      <div>
-        <%= f.label :name, "Nombre del Hogar o Familia", class: "block text-xs font-bold text-slate-700 mb-1" %>
-        <%= f.text_field :name, class: "block w-full px-3.5 py-2.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" %>
-      </div>
-      <button type="submit" class="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer">
-        Guardar Nombre
-      </button>
+    <% if is_leader %>
+      <%= form_with(model: @household, url: update_goal_household_path, method: :patch, class: "space-y-3") do |f| %>
+        <div>
+          <%= f.label :name, "Nombre del Hogar o Familia", class: "block text-xs font-bold text-slate-700 mb-1" %>
+          <%= f.text_field :name, class: "block w-full px-3.5 py-2.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" %>
+        </div>
+        <button type="submit" class="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer">
+          Guardar Nombre
+        </button>
+      <% end %>
     <% end %>
 
     <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
